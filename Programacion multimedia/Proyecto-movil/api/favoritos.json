@@ -1,0 +1,13 @@
+{
+  "favorites": [
+    { "artist": "Chase & Status", "image": "img/chaseandstatus.jpg" },
+    { "artist": "Gonzy", "image": "img/gonzy.jpg" },
+    { "artist": "Eladio Carrion", "image": "img/eladio.jpg" },
+    { "artist": "Costa", "image": "img/costa.jpg" },
+    { "artist": "Monstercat", "image": "img/monstercat.jpg" },
+    { "artist": "The Weeknd", "image": "img/weeknd.jpg" },
+    { "artist": "Rels B", "image": "img/rels.jpg" },
+    { "artist": "Skrillex", "image": "img/skrillex.jpg" }
+  ]
+}
+

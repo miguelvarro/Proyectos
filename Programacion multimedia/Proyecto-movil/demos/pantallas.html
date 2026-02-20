@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Demo pantallas animadas</title>
+  <link rel="stylesheet" href="../static/css/estilos.css">
+  <link rel="stylesheet" href="../static/css/pantallas.css">
+  <style>
+    .demoNav{ position:fixed; left:12px; right:12px; bottom:12px; display:flex; gap:10px; }
+    .demoNav button{ flex:1; padding:12px; border:0; border-radius:12px; background:var(--panel2); color:var(--text); }
+    .demoBox{ padding:16px; }
+  </style>
+</head>
+<body>
+  <div id="pantallas" class="screens" data-active="a">
+    <section class="screen isActive" data-screen="a">
+      <div class="demoBox">
+        <h2>Pantalla A</h2>
+        <p class="muted">Transición slide-in con CSS.</p>
+      </div>
+    </section>
+
+    <section class="screen" data-screen="b">
+      <div class="demoBox">
+        <h2>Pantalla B</h2>
+        <p class="muted">Pulsa abajo para cambiar.</p>
+      </div>
+    </section>
+
+    <section class="screen" data-screen="c">
+      <div class="demoBox">
+        <h2>Pantalla C</h2>
+        <p class="muted">Esto es lo que luego usa el “clon Spotify”.</p>
+      </div>
+    </section>
+  </div>
+
+  <div class="demoNav">
+    <button data-go="a">A</button>
+    <button data-go="b">B</button>
+    <button data-go="c">C</button>
+  </div>
+
+  <script>
+    (function(){
+      const screens = document.getElementById("pantallas");
+      const order = ["a","b","c"];
+
+      function setActive(name){
+        const all = Array.from(document.querySelectorAll(".screen"));
+        const idx = order.indexOf(name);
+        all.forEach(s => {
+          s.classList.remove("isActive","isLeft");
+          const sIdx = order.indexOf(s.dataset.screen);
+          if (s.dataset.screen === name) s.classList.add("isActive");
+          if (sIdx !== -1 && sIdx < idx) s.classList.add("isLeft");
+        });
+        screens.dataset.active = name;
+      }
+
+      document.addEventListener("click", (e) => {
+        const go = e.target?.closest?.("[data-go]")?.dataset?.go;
+        if (go) setActive(go);
+      });
+    })();
+  </script>
+</body>
+</html>
+

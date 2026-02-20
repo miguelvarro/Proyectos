@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Biblioteca · MP3</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="back" href="index.html">← Inicio</a>
+    <h1>Biblioteca MP3</h1>
+    <p class="muted">Info almacenada (favoritos / notas) en localStorage</p>
+  </header>
+
+  <main class="container">
+    <section class="panel">
+      <div class="row between">
+        <h3>Listado</h3>
+        <button id="btnReset" class="btn">Reset localStorage</button>
+      </div>
+      <div id="list" class="list"></div>
+      <div class="panel warn" id="libWarn" style="display:none"></div>
+    </section>
+  </main>
+
+  <script src="js/utils.js"></script>
+  <script src="js/mp3Store.js"></script>
+  <script src="js/mp3Library.js"></script>
+</body>
+</html>
+

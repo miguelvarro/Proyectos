@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Vídeo · Player personalizado</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/video.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="back" href="index.html">← Inicio</a>
+    <h1>Vídeo</h1>
+    <p class="muted">Controles personalizados + calidades + miniaturas</p>
+  </header>
+
+  <main class="container">
+    <section class="video-shell">
+      <div id="videoContainer" class="video-container">
+        <video id="video" preload="metadata" playsinline></video>
+
+        <div class="controls" id="controls">
+          <button id="btnPlay" class="btn">▶</button>
+          <button id="btnPause" class="btn">⏸</button>
+
+          <div class="time">
+            <span id="cur">0:00</span>
+            <span class="muted">/</span>
+            <span id="dur">0:00</span>
+          </div>
+
+          <input id="seek" type="range" min="0" max="1000" value="0" class="seek" />
+
+          <label class="muted small">Vol</label>
+          <input id="vol" type="range" min="0" max="1" step="0.01" value="1" class="vol" />
+
+          <label class="muted small">Calidad</label>
+          <select id="quality" class="quality"></select>
+
+          <button id="btnFs" class="btn">⛶</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>Miniaturas personalizadas</h3>
+        <p class="muted">Captura el frame actual del vídeo y genera una miniatura (canvas → imagen).</p>
+        <div class="row">
+          <button id="btnThumb" class="primary">Generar miniatura</button>
+          <a id="downloadThumb" class="link" download="thumb.jpg" style="display:none">Descargar</a>
+        </div>
+        <div id="thumbOut" class="thumb-out"></div>
+      </div>
+
+      <div class="panel warn" id="videoWarn" style="display:none"></div>
+    </section>
+  </main>
+
+  <script src="js/utils.js"></script>
+  <script src="js/thumbnailGenerator.js"></script>
+  <script src="js/videoPlayer.js"></script>
+</body>
+</html>
+

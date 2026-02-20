@@ -1,0 +1,1516 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Síntesis + Editor de partitura</title>
+  <style>
+    :root{
+      --bg:#07080c;
+      --panel:#0b0f19;
+      --panel2:#090c14;
+      --ink:#f3f4ff;
+      --muted:rgba(243,244,255,.72);
+      --line:rgba(255,138,42,.22);
+      --shadow:0 18px 40px rgba(0,0,0,.55);
+      --radius:16px;
+      --accent:#ff8a2a;
+      --accent2:#ffb26b;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial;
+      background:
+        radial-gradient(900px 520px at 18% 12%, rgba(255,138,42,.18), transparent 60%),
+        radial-gradient(900px 520px at 85% 20%, rgba(255,190,110,.10), transparent 60%),
+        var(--bg);
+      color:var(--ink);
+      display:flex;
+      align-items:stretch;
+      justify-content:center;
+      padding:18px;
+    }
+
+    .app{
+      width:min(1600px, 100%);
+      height:calc(100vh - 36px);
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+    }
+
+    .topbar{
+      background:rgba(11,15,25,.90);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:14px 14px;
+      display:flex;
+      gap:14px;
+      align-items:flex-start;
+      justify-content:space-between;
+      flex-wrap:wrap;
+      backdrop-filter: blur(10px);
+    }
+
+    .title{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      min-width:280px;
+    }
+    .title h1{
+      margin:0;
+      font-size:16px;
+      letter-spacing:.2px;
+    }
+    .title p{
+      margin:0;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.35;
+      max-width:82ch;
+    }
+
+    .controls{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+
+    button, select{
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.06);
+      color:var(--ink);
+      border-radius:12px;
+      padding:10px 12px;
+      font-size:14px;
+      cursor:pointer;
+      transition:transform .05s ease, box-shadow .15s ease, background .15s ease, border-color .15s ease;
+      box-shadow:0 1px 0 rgba(0,0,0,.08);
+    }
+    button:hover, select:hover{
+      box-shadow:0 12px 24px rgba(0,0,0,.22);
+      background:rgba(255,255,255,.09);
+      border-color:rgba(255,138,42,.34);
+    }
+    button:active{transform:translateY(1px)}
+    .danger{
+      border-color:rgba(255,90,90,.35);
+    }
+    .danger:hover{box-shadow:0 12px 24px rgba(190,30,30,.18)}
+    .primary{
+      border-color:rgba(255,138,42,.85);
+      background:rgba(255,138,42,.18);
+    }
+    .primary:hover{background:rgba(255,138,42,.26)}
+    .pill{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      padding:10px 12px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.05);
+      border-radius:12px;
+      color:var(--muted);
+      font-size:13px;
+      white-space:nowrap;
+    }
+    .pill b{color:var(--ink); font-weight:650}
+
+    .layout{
+      flex:1;
+      display:grid;
+      grid-template-columns: 1.05fr 1fr;
+      gap:14px;
+      min-height:0;
+    }
+
+    .panel{
+      background:rgba(11,15,25,.90);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+      min-height:0;
+      backdrop-filter: blur(10px);
+      display:flex;
+      flex-direction:column;
+    }
+
+    .panelHead{
+      padding:12px 14px;
+      border-bottom:1px solid var(--line);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .panelHead .meta{
+      display:flex; flex-direction:column; gap:4px;
+    }
+    .panelHead .meta .h{
+      font-size:13.5px; font-weight:700; letter-spacing:.2px;
+    }
+    .panelHead .meta .s{
+      font-size:12.5px; color:var(--muted);
+    }
+
+    .canvasWrap{
+      position:relative;
+      flex:1;
+      min-height:0;
+      background:
+        radial-gradient(1000px 600px at 30% 30%, rgba(255,138,42,.10), transparent 60%),
+        radial-gradient(900px 600px at 70% 40%, rgba(255,178,107,.06), transparent 60%),
+        var(--panel2);
+    }
+    canvas{
+      display:block;
+      width:100%;
+      height:100%;
+    }
+
+    .hud{
+      position:absolute;
+      left:12px;
+      top:12px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      pointer-events:none;
+      font-size:12.5px;
+      color:rgba(243,244,255,.88);
+    }
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      background:rgba(0,0,0,.35);
+      border:1px solid rgba(255,138,42,.18);
+      padding:8px 10px;
+      border-radius:999px;
+      width:fit-content;
+    }
+    .dot{
+      width:10px; height:10px; border-radius:50%;
+      background:rgba(130,140,160,.9);
+      box-shadow:0 0 0 3px rgba(130,140,160,.18);
+    }
+    .dot.rec{
+      background:rgba(255,90,90,.95);
+      box-shadow:0 0 0 3px rgba(255,90,90,.20);
+    }
+
+    .editorWrap{
+      flex:1;
+      min-height:0;
+      display:flex;
+      flex-direction:column;
+    }
+    .stage{
+      flex:1;
+      min-height:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:10px 0 10px;
+    }
+    svg{
+      width:min(1100px, 100%);
+      height:auto;
+      border:1px solid rgba(0,0,0,.08);
+      border-radius:14px;
+      background:#fff;
+      user-select:none;
+      touch-action:none;
+    }
+
+    .footer{
+      padding:10px 14px;
+      border-top:1px solid var(--line);
+      color:var(--muted);
+      font-size:12.5px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:space-between;
+      align-items:center;
+    }
+    code{background:rgba(255,138,42,.12); padding:2px 6px; border-radius:8px; color:var(--ink)}
+    .ok{color:#45d483}
+    .warn{color:#ffcc66}
+
+    .tagPaused{
+      display:none;
+      color:rgba(255,190,110,.95);
+      font-weight:700;
+    }
+    .tagPaused.on{display:inline}
+  </style>
+</head>
+
+<body>
+  <div class="app">
+
+    <div class="topbar">
+      <div class="title">
+        <h1>Síntesis musical + Editor de partitura <span id="pausedTag" class="tagPaused">· PAUSADO</span></h1>
+        <p>
+          <b>Izquierda:</b> arrastra dentro de un círculo para lanzar pelotas; cada rebote toca una nota.
+          <b>REC</b> graba colisiones (cuantizado a <b>semicorcheas</b>) y <b>Volcar</b> las inserta como notas en el pentagrama.
+        </p>
+      </div>
+
+      <div class="controls">
+        <button id="activar" class="primary">Activar audio</button>
+
+        <button id="playAll" class="primary">Reproducir</button>
+
+        <button id="parar" class="danger">Parar</button>
+
+        <!-- Recording -->
+        <button id="rec" class="primary" title="Graba colisiones y cuantiza a semicorcheas">REC</button>
+        <button id="volcar" title="Convierte lo grabado en notas del pentagrama">Volcar a partitura</button>
+        <button id="limpiarRec" class="danger" title="Borra la grabación actual">Limpiar grabación</button>
+
+        <!-- Editor tools -->
+        <button id="modoBorrar" class="danger" title="Activa/desactiva el modo borrar">Borrar</button>
+        <button id="limpiar" class="danger" title="Elimina todas las notas y borra el guardado">Limpiar todo</button>
+
+        <div class="pill">
+          <span>Figura:</span>
+          <select id="dur">
+            <option value="whole">Redonda</option>
+            <option value="half">Blanca</option>
+            <option value="quarter" selected>Negra</option>
+            <option value="eighth">Corchea</option>
+            <option value="sixteenth">Semicorchea</option>
+          </select>
+        </div>
+
+        <div class="pill">
+          <span>Tempo:</span>
+          <select id="bpm">
+            <option>60</option><option>80</option><option selected>100</option><option>120</option><option>140</option>
+          </select>
+          <span>bpm</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="layout">
+      <!-- LEFT: SYNTH CANVAS -->
+      <section class="panel">
+        <div class="panelHead">
+          <div class="meta">
+            <div class="h">Síntesis por colisiones (Bass & Treble)</div>
+            <div class="s">Arrastra para lanzar una bola dentro de cada círculo. Rebotan y tocan Do mayor (naturales).</div>
+          </div>
+          <div class="pill">
+            <span>Grabación:</span>
+            <b id="recState">OFF</b>
+            <span>·</span>
+            <span>Eventos:</span>
+            <b id="recCount">0</b>
+          </div>
+        </div>
+
+        <div class="canvasWrap">
+          <canvas id="canvas"></canvas>
+          <div class="hud">
+            <div class="chip"><span class="dot" id="recDot"></span> <span id="hudRec">REC OFF</span></div>
+            <div class="chip">Tips: <span class="warn">drag</span> para lanzar · “Parar” congela bolas + audio</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT: EDITOR -->
+      <section class="panel">
+        <div class="panelHead">
+          <div class="meta">
+            <div class="h">Pentagrama (Clave de Sol) · 4/4 · Editor con auto-guardado</div>
+            <div class="s">
+              Clic en vacío: crea nota (suena). Arrastra nota: reubica (suena al cambiar).
+              <span class="ok">Auto-guardado en LocalStorage.</span>
+            </div>
+          </div>
+          <div class="pill">
+            <span>Cuantización:</span> <code>semicorcheas</code> (16/compás)
+          </div>
+        </div>
+
+        <div class="editorWrap">
+          <div class="stage">
+            <svg id="score" viewBox="0 0 1100 280" role="img" aria-label="Pentagrama con compases"></svg>
+          </div>
+          <div class="footer">
+            <span>Agrupación: <code>por pulso</code> (beams dentro del pulso).</span>
+            <span>Polifonía: sí. Naturales (sin sostenidos/bemoles).</span>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+<script>
+(() => {
+  // ============================================================
+  // 0) GLOBAL PAUSE (NEW)
+  // ============================================================
+  let PAUSED = false;
+  const pausedTag = document.getElementById("pausedTag");
+  function setPausedUI(){
+    pausedTag.classList.toggle("on", PAUSED);
+  }
+
+  // ============================================================
+  // 1) AUDIO (motor "piano") - COMPARTIDO
+  // ============================================================
+  let ctx = null;
+
+  let master = null;
+  let comp = null;
+  let reverb = null;
+  let wet = null;
+  let dry = null;
+
+  let pianoWave = null;
+  let stopAllScheduled = null;
+
+  function asegurarAudio() {
+    if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (ctx.state !== "running") ctx.resume();
+
+    if (!master) {
+      master = ctx.createGain();
+      master.gain.value = 0.92;
+
+      comp = ctx.createDynamicsCompressor();
+      comp.threshold.value = -24;
+      comp.knee.value = 24;
+      comp.ratio.value = 3.2;
+      comp.attack.value = 0.004;
+      comp.release.value = 0.12;
+
+      reverb = ctx.createConvolver();
+      reverb.buffer = crearImpulsoReverb(1.35, 2.0);
+
+      wet = ctx.createGain();
+      dry = ctx.createGain();
+      wet.gain.value = 0.16;
+      dry.gain.value = 0.92;
+
+      dry.connect(comp);
+      wet.connect(comp);
+      comp.connect(master);
+      master.connect(ctx.destination);
+    }
+
+    if (!pianoWave) pianoWave = crearOndaPiano();
+  }
+
+  function crearImpulsoReverb(segundos, decay) {
+    const rate = ctx.sampleRate;
+    const len = Math.max(1, Math.floor(rate * segundos));
+    const buf = ctx.createBuffer(2, len, rate);
+    for (let ch = 0; ch < 2; ch++) {
+      const data = buf.getChannelData(ch);
+      for (let i = 0; i < len; i++) {
+        const t = i / len;
+        const env = Math.pow(1 - t, decay);
+        data[i] = (Math.random() * 2 - 1) * env;
+      }
+    }
+    return buf;
+  }
+
+  function crearOndaPiano() {
+    const N = 32;
+    const real = new Float32Array(N);
+    const imag = new Float32Array(N);
+    real[0] = 0; imag[0] = 0;
+
+    for (let n = 1; n < N; n++) {
+      let a = 1 / n;
+
+      const bump =
+        1.0
+        + 0.55 * Math.exp(-Math.pow((n - 3) / 2.0, 2))
+        + 0.35 * Math.exp(-Math.pow((n - 7) / 2.8, 2))
+        + 0.22 * Math.exp(-Math.pow((n - 12) / 3.0, 2));
+
+      a *= bump;
+      a *= Math.exp(-n / 18);
+
+      imag[n] = a * (n % 2 === 0 ? 0.18 : -0.12);
+      real[n] = a;
+    }
+    return ctx.createPeriodicWave(real, imag, { disableNormalization: false });
+  }
+
+  function midiAHz(m){ return 440 * Math.pow(2, (m - 69) / 12); }
+
+  function vozPiano(midi, cuando, durSec, vel = 0.95) {
+    asegurarAudio();
+    const t0 = Math.max(cuando, ctx.currentTime + 0.005);
+    const f0 = midiAHz(midi);
+
+    const o1 = ctx.createOscillator();
+    const o2 = ctx.createOscillator();
+    o1.setPeriodicWave(pianoWave);
+    o2.setPeriodicWave(pianoWave);
+    o1.frequency.setValueAtTime(f0, t0);
+    o2.frequency.setValueAtTime(f0, t0);
+    o2.detune.setValueAtTime(+3.5, t0);
+
+    const noiseDur = 0.010;
+    const noiseBuf = ctx.createBuffer(1, Math.max(1, Math.floor(ctx.sampleRate * noiseDur)), ctx.sampleRate);
+    {
+      const data = noiseBuf.getChannelData(0);
+      for (let i = 0; i < data.length; i++) data[i] = (Math.random()*2-1) * (1 - i/data.length);
+    }
+    const noise = ctx.createBufferSource();
+    noise.buffer = noiseBuf;
+
+    const hp = ctx.createBiquadFilter();
+    hp.type = "highpass";
+    hp.frequency.setValueAtTime(Math.min(2200, Math.max(600, f0 * 2.2)), t0);
+    hp.Q.setValueAtTime(0.9, t0);
+
+    const gNoise = ctx.createGain();
+    gNoise.gain.setValueAtTime(0.0001, t0);
+    gNoise.gain.exponentialRampToValueAtTime(0.06 * vel, t0 + 0.002);
+    gNoise.gain.exponentialRampToValueAtTime(0.0001, t0 + noiseDur);
+
+    const lp = ctx.createBiquadFilter();
+    lp.type = "lowpass";
+    const lpStart = Math.min(12000, Math.max(2500, f0 * 9));
+    const lpEnd   = Math.min(7000,  Math.max(1400, f0 * 3.4));
+    lp.frequency.setValueAtTime(lpStart, t0);
+    lp.frequency.exponentialRampToValueAtTime(lpEnd, t0 + Math.min(1.1, durSec * 0.75));
+    lp.Q.setValueAtTime(0.35, t0);
+
+    const band = ctx.createBiquadFilter();
+    band.type = "bandpass";
+    band.frequency.setValueAtTime(Math.min(2600, Math.max(300, f0 * 2.4)), t0);
+    band.Q.setValueAtTime(0.7, t0);
+
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t0);
+
+    const attack = 0.004;
+    const reg = Math.max(0.65, Math.min(1.25, 110 / Math.max(55, f0)));
+    const decay = Math.min(2.6, Math.max(0.55, durSec * 1.25 * reg));
+    const release = 0.11;
+
+    const peak = 1.00 * vel;
+    const mid  = 0.16 * vel;
+
+    g.gain.exponentialRampToValueAtTime(peak, t0 + attack);
+    g.gain.exponentialRampToValueAtTime(mid,  t0 + attack + decay);
+
+    const relStart = t0 + Math.max(0.10, durSec - release);
+    g.gain.setValueAtTime(Math.max(0.02 * vel, 0.00025), relStart);
+    g.gain.exponentialRampToValueAtTime(0.0001, relStart + release);
+
+    const mix = ctx.createGain();
+    mix.gain.setValueAtTime(1.0, t0);
+
+    const pan = ctx.createStereoPanner();
+    const panVal = Math.max(-0.35, Math.min(0.35, (midi - 64) / 26));
+    pan.pan.setValueAtTime(panVal, t0);
+
+    o1.connect(mix);
+    o2.connect(mix);
+
+    mix.connect(lp);
+    lp.connect(band);
+    band.connect(pan);
+    pan.connect(g);
+
+    g.connect(dry);
+    g.connect(reverb);
+    reverb.connect(wet);
+
+    noise.connect(hp);
+    hp.connect(gNoise);
+    gNoise.connect(dry);
+    gNoise.connect(reverb);
+    reverb.connect(wet);
+
+    o1.start(t0); o2.start(t0);
+    noise.start(t0); noise.stop(t0 + noiseDur + 0.01);
+
+    const tStop = relStart + release + 0.04;
+    o1.stop(tStop); o2.stop(tStop);
+
+    return { tStop };
+  }
+
+  // NEW: pause/resume audio "hard"
+  function pauseAudioHard(){
+    if (!ctx || !master) return;
+    const t = ctx.currentTime + 0.005;
+    master.gain.cancelScheduledValues(t);
+    master.gain.setValueAtTime(master.gain.value, t);
+    master.gain.exponentialRampToValueAtTime(0.0001, t + 0.04);
+    master.gain.setValueAtTime(0.0001, t + 0.06); // se queda muteado
+  }
+  function resumeAudioHard(){
+    if (!ctx || !master) return;
+    const t = ctx.currentTime + 0.005;
+    master.gain.cancelScheduledValues(t);
+    master.gain.setValueAtTime(master.gain.value, t);
+    master.gain.exponentialRampToValueAtTime(0.92, t + 0.05);
+  }
+
+  // 2) PENTAGRAMA + API importación
+  const LS_KEY = "pentagrama_editor_v2";
+
+  const svg = document.getElementById("score");
+  const W = 1100;
+  const marginL = 90;
+  const marginR = 30;
+  const staffTop = 85;
+  const spacing = 14;
+  const stepH = spacing / 2;
+  const staffBottomLineY = staffTop + 4 * spacing;
+
+  const LETRAS = ["C","D","E","F","G","A","B"];
+  const SEMI = {C:0, D:2, E:4, F:5, G:7, A:9, B:11};
+
+  function stepANota(step) {
+    let letra = "E", octava = 4; // step=0 => E4
+    let idx = LETRAS.indexOf(letra);
+    const dir = Math.sign(step);
+    for (let i=0; i<Math.abs(step); i++) {
+      idx += dir;
+      if (idx > 6) { idx = 0; octava += 1; }
+      if (idx < 0) { idx = 6; octava -= 1; }
+    }
+    letra = LETRAS[idx];
+    const midi = (octava + 1) * 12 + SEMI[letra];
+    return { letra, octava, midi };
+  }
+  function stepAY(step){ return staffBottomLineY - step * stepH; }
+  function yAStep(y){ return Math.round((staffBottomLineY - y) / stepH); }
+  function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
+
+  const subdivPorPulso = 4;
+  const pulsosPorCompas = 4;
+  const subdivPorCompas = subdivPorPulso * pulsosPorCompas;
+  const gridPx = 20;
+
+  const usableW = (W - marginR) - marginL;
+  const compasesVisibles = Math.floor(usableW / (gridPx * subdivPorCompas));
+  const totalSubdivVisibles = compasesVisibles * subdivPorCompas;
+
+  function xASubdiv(x){ return Math.round((x - marginL) / gridPx); }
+  function subdivAX(sub){ return marginL + sub * gridPx; }
+
+  const durBeats = { whole:4, half:2, quarter:1, eighth:0.5, sixteenth:0.25 };
+  function beatsASeg(beats, bpm){ return (60/bpm) * beats; }
+
+  let notas = [];
+  let nextId = 1;
+  let modoBorrar = false;
+
+  function guardar() {
+    const payload = { notas, nextId };
+    try { localStorage.setItem(LS_KEY, JSON.stringify(payload)); } catch {}
+  }
+  function cargar() {
+    try {
+      const raw = localStorage.getItem(LS_KEY);
+      if (!raw) return;
+      const data = JSON.parse(raw);
+      if (Array.isArray(data.notas)) notas = data.notas;
+      if (typeof data.nextId === "number") nextId = data.nextId;
+    } catch {}
+  }
+  function borrarGuardado() {
+    try { localStorage.removeItem(LS_KEY); } catch {}
+  }
+
+  function limpiarSVG(){ while (svg.firstChild) svg.removeChild(svg.firstChild); }
+
+  function el(name, attrs={}) {
+    const n = document.createElementNS("http://www.w3.org/2000/svg", name);
+    for (const [k,v] of Object.entries(attrs)) n.setAttribute(k, String(v));
+    return n;
+  }
+
+  function dibujarPentagrama() {
+    for (let i=0; i<5; i++) {
+      const y = staffTop + i*spacing;
+      svg.appendChild(el("line",{x1:marginL,y1:y,x2:W-marginR,y2:y,stroke:"#111","stroke-width":1.4}));
+    }
+
+    const clave = el("text",{x:18,y:staffTop+4.2*spacing,"font-size":72,"font-family":"serif",fill:"#111"});
+    clave.textContent="𝄞";
+    svg.appendChild(clave);
+
+    const tsTop = el("text",{x:64,y:staffTop+1.9*spacing,"font-size":28,"font-family":"serif",fill:"#111"});
+    tsTop.textContent="4";
+    const tsBot = el("text",{x:64,y:staffTop+3.8*spacing,"font-size":28,"font-family":"serif",fill:"#111"});
+    tsBot.textContent="4";
+    svg.appendChild(tsTop); svg.appendChild(tsBot);
+
+    for (let sub=0; sub<=totalSubdivVisibles; sub++) {
+      const x = subdivAX(sub);
+      const esPulso = (sub % subdivPorPulso)===0;
+      svg.appendChild(el("line",{
+        x1:x,y1:staffTop-24,x2:x,y2:staffTop+4*spacing+24,
+        stroke:"#000","stroke-opacity":esPulso?0.06:0.03,"stroke-width":1
+      }));
+    }
+
+    for (let c=0; c<=compasesVisibles; c++) {
+      const x = subdivAX(c*subdivPorCompas);
+      svg.appendChild(el("line",{
+        x1:x,y1:staffTop-26,x2:x,y2:staffTop+4*spacing+26,
+        stroke:"#111","stroke-width":(c===0?2.2:1.8)
+      }));
+    }
+  }
+
+  function dibujarLineasAdicionales(x, step) {
+    const minStep=0,maxStep=8;
+    const ledgers=[];
+    if (step<minStep) for (let s=-2;s>=step;s-=2) ledgers.push(s);
+    if (step>maxStep) for (let s=10;s<=step;s+=2) ledgers.push(s);
+    for (const s of ledgers) {
+      const y = stepAY(s);
+      svg.appendChild(el("line",{x1:x-18,y1:y,x2:x+18,y2:y,stroke:"#111","stroke-width":1.4}));
+    }
+  }
+
+  function stemUpPara(step, stepsGrupo) {
+    if (stepsGrupo && stepsGrupo.length>1) {
+      const media = stepsGrupo.reduce((a,b)=>a+b,0)/stepsGrupo.length;
+      return media < 4;
+    }
+    return step < 4;
+  }
+
+  const BEAM_THICK = 5;
+  const BEAM_GAP = 7;
+
+  function beamable(dur){ return dur === "eighth" || dur === "sixteenth"; }
+  function isSix(dur){ return dur === "sixteenth"; }
+
+  function rectBeam(x1,y1,x2,y2,thick){
+    const dx = x2-x1, dy = y2-y1;
+    const len = Math.hypot(dx,dy) || 1;
+    const nx = -dy/len, ny = dx/len;
+    const ox = nx * thick, oy = ny * thick;
+
+    const d = [
+      `M ${x1} ${y1}`,
+      `L ${x2} ${y2}`,
+      `L ${x2+ox} ${y2+oy}`,
+      `L ${x1+ox} ${y1+oy}`,
+      "Z"
+    ].join(" ");
+    return el("path",{ d, fill:"#111" });
+  }
+
+  function dibujarBeamsMejorado(notasOrdenadas, stemsInfoPorId) {
+    const porPulso = new Map();
+    for (const n of notasOrdenadas) {
+      if (!beamable(n.dur)) continue;
+      const pulso = Math.floor(n.sub / subdivPorPulso);
+      if (!porPulso.has(pulso)) porPulso.set(pulso, []);
+      porPulso.get(pulso).push(n);
+    }
+
+    for (const [pulso, arr] of porPulso.entries()) {
+      arr.sort((a,b)=>a.sub-b.sub || a.step-b.step);
+
+      const bySub = new Map();
+      for (const n of arr) {
+        if (!bySub.has(n.sub)) bySub.set(n.sub, []);
+        bySub.get(n.sub).push(n);
+      }
+
+      const reps = [];
+      for (const [sub, list] of bySub.entries()) {
+        const avgStep = list.reduce((a,b)=>a+b.step,0)/list.length;
+        reps.push({ sub, stepAvg: avgStep, ids: list.map(x=>x.id), anySix: list.some(x=>isSix(x.dur)) });
+      }
+      reps.sort((a,b)=>a.sub-b.sub);
+
+      const runs = [];
+      let cur = [];
+      for (let i=0;i<reps.length;i++){
+        if (!cur.length) { cur.push(reps[i]); continue; }
+        const prev = cur[cur.length-1];
+        const gap = reps[i].sub - prev.sub;
+        if (gap <= 2) cur.push(reps[i]);
+        else { runs.push(cur); cur=[reps[i]]; }
+      }
+      if (cur.length) runs.push(cur);
+
+      for (const run of runs) {
+        if (run.length < 2) continue;
+
+        const avg = run.reduce((a,b)=>a+b.stepAvg,0)/run.length;
+        const up = avg < 4;
+
+        const xys = run.map(r=>{
+          const info = stemsInfoPorId.get(r.ids[0]);
+          if (!info) return null;
+          return { xStem: info.xStem, yEnd: info.yStemEnd };
+        }).filter(Boolean);
+
+        if (xys.length !== run.length) continue;
+
+        const first = xys[0];
+        const last  = xys[xys.length-1];
+
+        const off = up ? -8 : +8;
+        let y1 = first.yEnd + off;
+        let y2 = last.yEnd  + off;
+
+        const maxSlope = 0.35;
+        const dx = (last.xStem - first.xStem) || 1;
+        const slope = (y2 - y1) / dx;
+        if (slope > maxSlope)  y2 = y1 + maxSlope * dx;
+        if (slope < -maxSlope) y2 = y1 - maxSlope * dx;
+
+        svg.appendChild(rectBeam(first.xStem, y1, last.xStem, y2, BEAM_THICK));
+
+        const needsSecond = run.some(r=>r.anySix);
+        if (needsSecond) {
+          function yAt(x){
+            const t = (x - first.xStem) / dx;
+            const y = y1 + (y2 - y1) * t;
+            return up ? (y + BEAM_THICK + BEAM_GAP) : (y - BEAM_THICK - BEAM_GAP);
+          }
+
+          for (let i=0;i<run.length;i++){
+            const a = run[i];
+            const ax = xys[i].xStem;
+            if (!a.anySix) continue;
+
+            const next = run[i+1];
+            const prev = run[i-1];
+            const nextGap = next ? (next.sub - a.sub) : 999;
+            const prevGap = prev ? (a.sub - prev.sub) : 999;
+
+            if (next && nextGap === 1 && next.anySix) {
+              const bx = xys[i+1].xStem;
+              svg.appendChild(rectBeam(ax, yAt(ax), bx, yAt(bx), BEAM_THICK));
+            } else if (prevGap !== 1) {
+              const short = ax + 14;
+              svg.appendChild(rectBeam(ax, yAt(ax), short, yAt(short), BEAM_THICK));
+            }
+          }
+        }
+      }
+    }
+  }
+
+  function dibujarBanderasSueltas(notasOrdenadas, stemsInfoPorId) {
+    const porPulso = new Map();
+    for (const n of notasOrdenadas) {
+      if (!beamable(n.dur)) continue;
+      const pulso = Math.floor(n.sub / subdivPorPulso);
+      if (!porPulso.has(pulso)) porPulso.set(pulso, []);
+      porPulso.get(pulso).push(n);
+    }
+
+    function banderaPath(xStem, yEnd, up, i) {
+      const dy = i * 8;
+      const y0 = up ? (yEnd + dy) : (yEnd - dy);
+      return up
+        ? `M ${xStem} ${y0} Q ${xStem+10} ${y0+4} ${xStem+6} ${y0+14} Q ${xStem+2} ${y0+22} ${xStem+14} ${y0+26}`
+        : `M ${xStem} ${y0} Q ${xStem-10} ${y0-4} ${xStem-6} ${y0-14} Q ${xStem-2} ${y0-22} ${xStem-14} ${y0-26}`;
+    }
+
+    for (const [pulso, arr] of porPulso.entries()) {
+      arr.sort((a,b)=>a.sub-b.sub);
+
+      let hasBeamPair = false;
+      for (let i=0;i<arr.length-1;i++){
+        if ((arr[i+1].sub - arr[i].sub) <= 2) { hasBeamPair = true; break; }
+      }
+      if (hasBeamPair) continue;
+
+      for (const n of arr) {
+        const info = stemsInfoPorId.get(n.id);
+        if (!info) continue;
+        const count = (n.dur === "sixteenth") ? 2 : 1;
+        for (let i=0; i<count; i++) {
+          svg.appendChild(el("path",{
+            d: banderaPath(info.xStem, info.yStemEnd, info.stemUp, i),
+            fill:"none", stroke:"#111", "stroke-width":2, "stroke-linecap":"round"
+          }));
+        }
+      }
+    }
+  }
+
+  function dibujarNota(n, stepsGrupo, stemsInfoPorId) {
+    const x = subdivAX(n.sub);
+    const y = stepAY(n.step);
+
+    dibujarLineasAdicionales(x, n.step);
+
+    const esRedonda = n.dur==="whole";
+    const esNegra   = n.dur==="quarter" || n.dur==="eighth" || n.dur==="sixteenth";
+    const rellena = esNegra;
+
+    const g = el("g", { "data-note-id": n.id, cursor: modoBorrar ? "not-allowed" : "grab" });
+
+    const cabeza = el("ellipse",{
+      cx:x, cy:y, rx:10.5, ry:7.2,
+      fill: rellena ? "#111" : "#fff",
+      stroke:"#111","stroke-width":2,
+      transform:`rotate(-18 ${x} ${y})`
+    });
+
+    const { letra, octava } = stepANota(n.step);
+    const title = el("title");
+    title.textContent = `${letra}${octava} · ${n.dur}`;
+    cabeza.appendChild(title);
+
+    g.appendChild(cabeza);
+
+    if (!esRedonda) {
+      const stemUp = stemUpPara(n.step, stepsGrupo);
+      const xStem = stemUp ? (x + 9) : (x - 9);
+      const y2 = stemUp ? (y - 44) : (y + 44);
+
+      const stem = el("line",{
+        x1:xStem,y1:y,x2:xStem,y2:y2,
+        stroke:"#111","stroke-width":2.2,"stroke-linecap":"round"
+      });
+      g.appendChild(stem);
+
+      stemsInfoPorId.set(n.id, { xStem, yStemEnd: y2, stemUp });
+    }
+
+    g.addEventListener("click", (e) => {
+      if (!modoBorrar) return;
+      e.stopPropagation();
+      notas = notas.filter(x => x.id !== n.id);
+      guardar();
+      render();
+    });
+    g.addEventListener("contextmenu", (e) => {
+      e.preventDefault();
+      notas = notas.filter(x => x.id !== n.id);
+      guardar();
+      render();
+    });
+
+    svg.appendChild(g);
+  }
+
+  function render() {
+    limpiarSVG();
+    dibujarPentagrama();
+
+    const grupoPorSub = new Map();
+    for (const n of notas) {
+      if (!grupoPorSub.has(n.sub)) grupoPorSub.set(n.sub, []);
+      grupoPorSub.get(n.sub).push(n);
+    }
+
+    const ordenadas = [...notas].sort((a,b)=>a.sub-b.sub || a.step-b.step);
+
+    const stemsInfoPorId = new Map();
+    for (const n of ordenadas) {
+      const grupo = grupoPorSub.get(n.sub) || [];
+      const steps = grupo.map(x=>x.step);
+      dibujarNota(n, steps, stemsInfoPorId);
+    }
+
+    dibujarBeamsMejorado(ordenadas, stemsInfoPorId);
+    dibujarBanderasSueltas(ordenadas, stemsInfoPorId);
+  }
+
+  function puntoSVG(evt) {
+    const pt = svg.createSVGPoint();
+    pt.x = evt.clientX;
+    pt.y = evt.clientY;
+    const m = svg.getScreenCTM().inverse();
+    return pt.matrixTransform(m);
+  }
+  function encontrarGrupoNota(target) {
+    if (!target) return null;
+    if (target.tagName === "g" && target.getAttribute("data-note-id")) return target;
+    if (target.closest) return target.closest("g[data-note-id]");
+    return null;
+  }
+
+  let drag = null;
+  const PREVIEW_MIN_MS = 55;
+
+  function previsualizar(nota) {
+    if (PAUSED) return; 
+    const bpm = Number(document.getElementById("bpm").value);
+    const beats = durBeats[nota.dur] ?? 1;
+    const sec = Math.min(1.35, Math.max(0.18, beatsASeg(beats, bpm) * 0.62));
+    const { midi } = stepANota(nota.step);
+    vozPiano(midi, ctx ? ctx.currentTime : 0, sec, 0.95);
+  }
+
+  svg.addEventListener("mousedown", (e) => {
+    if (PAUSED) return; 
+    const g = encontrarGrupoNota(e.target);
+    if (!g) return;
+    if (modoBorrar) return;
+
+    const id = Number(g.getAttribute("data-note-id"));
+    const n = notas.find(nn => nn.id === id);
+    if (!n) return;
+
+    const p = puntoSVG(e);
+    const subMouse = xASubdiv(p.x);
+    const stepMouse = yAStep(p.y);
+
+    drag = {
+      id,
+      offSub: n.sub - subMouse,
+      offStep: n.step - stepMouse,
+      lastKey: `${n.sub}:${n.step}`,
+      lastT: performance.now()
+    };
+
+    g.setAttribute("cursor", "grabbing");
+  });
+
+  svg.addEventListener("mousemove", (e) => {
+    if (PAUSED) return; 
+    if (!drag) return;
+
+    const p = puntoSVG(e);
+    let sub = xASubdiv(p.x) + drag.offSub;
+    let step = yAStep(p.y) + drag.offStep;
+
+    sub = clamp(sub, 0, totalSubdivVisibles);
+    step = clamp(step, -2, 12);
+
+    sub = Math.round(sub);
+    step = Math.round(step);
+
+    const n = notas.find(nn => nn.id === drag.id);
+    if (!n) return;
+
+    const changed = (n.sub !== sub) || (n.step !== step);
+    if (changed) {
+      n.sub = sub;
+      n.step = step;
+      render();
+      guardar();
+
+      const key = `${n.sub}:${n.step}`;
+      const now = performance.now();
+      if (key !== drag.lastKey && (now - drag.lastT) >= PREVIEW_MIN_MS) {
+        drag.lastKey = key;
+        drag.lastT = now;
+        previsualizar(n);
+      }
+    }
+  });
+
+  window.addEventListener("mouseup", () => { drag = null; });
+
+  svg.addEventListener("click", (e) => {
+    if (PAUSED) return; 
+    const g = encontrarGrupoNota(e.target);
+    if (g) return;
+    if (drag) return;
+    if (modoBorrar) return;
+
+    const p = puntoSVG(e);
+
+    let sub = clamp(xASubdiv(p.x), 0, totalSubdivVisibles);
+    let step = clamp(yAStep(p.y), -2, 12);
+
+    const durSel = document.getElementById("dur").value;
+    const n = { id: nextId++, sub: Math.round(sub), step: Math.round(step), dur: durSel };
+    notas.push(n);
+
+    render();
+    guardar();
+    previsualizar(n);
+  });
+
+  function reproducirTodo() {
+    if (!notas.length) return;
+    if (PAUSED) return; 
+    asegurarAudio();
+
+    const bpm = Number(document.getElementById("bpm").value);
+    const start = ctx.currentTime + 0.03;
+
+    const porSub = new Map();
+    for (const n of notas) {
+      if (!porSub.has(n.sub)) porSub.set(n.sub, []);
+      porSub.get(n.sub).push(n);
+    }
+
+    const subs = [...porSub.keys()].sort((a,b)=>a-b);
+
+    for (const sub of subs) {
+      const beatsDesdeInicio = sub / subdivPorPulso;
+      const cuando = start + beatsASeg(beatsDesdeInicio, bpm);
+
+      for (const n of porSub.get(sub)) {
+        const beats = durBeats[n.dur] ?? 1;
+        const durSec = beatsASeg(beats, bpm);
+        const { midi } = stepANota(n.step);
+        vozPiano(midi, cuando, durSec, 0.98);
+      }
+    }
+
+    stopAllScheduled = () => {
+      pauseAudioHard();
+    };
+  }
+
+  function setNotasExternas(newNotas, resetGuardado = false) {
+    notas = Array.isArray(newNotas) ? newNotas : [];
+    nextId = (notas.reduce((m,n)=>Math.max(m, Number(n.id)||0), 0) || 0) + 1;
+    if (resetGuardado) borrarGuardado();
+    guardar();
+    render();
+  }
+  
+  // 3) SÍNTESIS  + REC + VOLCADO
+  const canvas = document.getElementById('canvas');
+  const cctx = canvas.getContext('2d');
+
+  function resizeCanvas() {
+    const wrap = canvas.parentElement;
+    canvas.width = Math.floor(wrap.clientWidth * devicePixelRatio);
+    canvas.height = Math.floor(wrap.clientHeight * devicePixelRatio);
+    cctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+  }
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+
+  // Notas
+  const bassNotes = ['C3', 'D3', 'E3', 'F3', 'G3', 'A3', 'B3'];
+  const trebleNotes = ['C5', 'D5', 'E5', 'F5', 'G5', 'A5', 'B5'];
+
+  const ORANGE_PALETTE = ['#ff8a2a','#ff9a3b','#ffab55','#ffbf78','#ff7a1a','#ffb26b','#ff6a00'];
+  function colorForIndex(i){
+    return ORANGE_PALETTE[i % ORANGE_PALETTE.length];
+  }
+  const noteColors = {};
+  [...bassNotes, ...trebleNotes].forEach((n,i)=> noteColors[n] = colorForIndex(i));
+
+  function noteNameToMidi(name){
+    const L = name[0];
+    const oct = parseInt(name.slice(1), 10);
+    return (oct + 1) * 12 + SEMI[L];
+  }
+
+  function diatonicIndex(letter, oct){
+    return oct * 7 + LETRAS.indexOf(letter);
+  }
+  const REF_LETTER = "E";
+  const REF_OCT = 4;
+  const REF_DI = diatonicIndex(REF_LETTER, REF_OCT);
+
+  function noteNameToStep(name){
+    const letter = name[0];
+    const oct = parseInt(name.slice(1), 10);
+    return diatonicIndex(letter, oct) - REF_DI;
+  }
+
+  function circlesGeom(){
+    const w = canvas.clientWidth;
+    const h = canvas.clientHeight;
+    const centerY = h / 2;
+    const leftCenterX = w * 0.30;
+    const rightCenterX = w * 0.70;
+    const radius = Math.min(w, h) * 0.35;
+    return { w, h, centerY, leftCenterX, rightCenterX, radius };
+  }
+
+  const bassBalls = [];
+  const trebleBalls = [];
+  let ballSeq = 1;
+
+  let isDragging = false;
+  let dragStartX=0, dragStartY=0;
+  let dragEndX=0, dragEndY=0;
+  let currentCircle = null;
+
+  // REC
+  let REC = false;
+  let recStart = 0;
+  const hits = [];
+
+  const recBtn = document.getElementById('rec');
+  const volcarBtn = document.getElementById('volcar');
+  const limpiarRecBtn = document.getElementById('limpiarRec');
+  const recStateEl = document.getElementById('recState');
+  const recCountEl = document.getElementById('recCount');
+  const recDot = document.getElementById('recDot');
+  const hudRec = document.getElementById('hudRec');
+
+  function setRecUI(){
+    recStateEl.textContent = REC ? "ON" : "OFF";
+    recCountEl.textContent = String(hits.length);
+    recDot.classList.toggle("rec", REC);
+    hudRec.textContent = REC ? "REC ON" : "REC OFF";
+    recBtn.textContent = REC ? "REC (ON)" : "REC";
+  }
+
+  function secondsPerSub(){
+    const bpm = Number(document.getElementById("bpm").value);
+    return (60 / bpm) / 4;
+  }
+
+  function quantizeToSub(nowSec){
+    return Math.max(0, Math.round((nowSec - recStart) / secondsPerSub()));
+  }
+
+  function hexToRgb(hex) {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return { r, g, b };
+  }
+
+  function drawCircles() {
+    const { w, h, centerY, leftCenterX, rightCenterX, radius } = circlesGeom();
+    cctx.clearRect(0, 0, w, h);
+
+    // Base ring style 
+    cctx.strokeStyle = 'rgba(255,138,42,.28)';
+    cctx.lineWidth = 10;
+
+    // Bass
+    cctx.beginPath();
+    cctx.arc(leftCenterX, centerY, radius, 0, Math.PI * 2);
+    cctx.stroke();
+    drawArcs(bassNotes, leftCenterX, centerY, radius);
+
+    // Treble
+    cctx.beginPath();
+    cctx.arc(rightCenterX, centerY, radius, 0, Math.PI * 2);
+    cctx.stroke();
+    drawArcs(trebleNotes, rightCenterX, centerY, radius);
+
+    // labels
+    cctx.fillStyle = "rgba(255,190,110,.95)";
+    cctx.font = "800 14px system-ui, -apple-system, Segoe UI, Roboto";
+    cctx.fillText("BASS", leftCenterX - 22, centerY - radius - 18);
+    cctx.fillText("TREBLE", rightCenterX - 34, centerY - radius - 18);
+  }
+
+  function drawArcs(notes, centerX, centerY, radius) {
+    const arcAngle = (2 * Math.PI) / notes.length;
+    notes.forEach((note, i) => {
+      cctx.strokeStyle = noteColors[note];
+      cctx.lineWidth = 9;
+      cctx.beginPath();
+      cctx.arc(centerX, centerY, radius, i * arcAngle, (i + 1) * arcAngle);
+      cctx.stroke();
+    });
+  }
+
+  function drawBalls() {
+    function drawOne(ball){
+      for (let i = 0; i < 5; i++) {
+        const blurAlpha = 0.08 * (5 - i);
+        const rgb = hexToRgb(ball.color);
+        cctx.fillStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${blurAlpha})`;
+        cctx.beginPath();
+        cctx.arc(ball.x - ball.dx * i * 0.5, ball.y - ball.dy * i * 0.5, ball.radius + i * 0.5, 0, Math.PI * 2);
+        cctx.fill();
+      }
+
+      const gradient = cctx.createRadialGradient(ball.x, ball.y, ball.radius * 0.5, ball.x, ball.y, ball.radius * 2);
+      gradient.addColorStop(0, ball.color);
+      gradient.addColorStop(1, 'transparent');
+      cctx.fillStyle = gradient;
+      cctx.beginPath();
+      cctx.arc(ball.x, ball.y, ball.radius * 2, 0, Math.PI * 2);
+      cctx.fill();
+
+      cctx.fillStyle = ball.color;
+      cctx.beginPath();
+      cctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+      cctx.fill();
+    }
+    bassBalls.forEach(drawOne);
+    trebleBalls.forEach(drawOne);
+  }
+
+  function drawPreviewLine() {
+    if (isDragging && currentCircle) {
+      cctx.strokeStyle = 'rgba(255, 190, 110, 0.75)';
+      cctx.lineWidth = 3;
+      cctx.beginPath();
+      cctx.moveTo(dragStartX, dragStartY);
+      cctx.lineTo(dragEndX, dragEndY);
+      cctx.stroke();
+    }
+  }
+
+  function playNoteName(noteName, vel=0.9, durSec=0.35){
+    if (PAUSED) return;
+    const midi = noteNameToMidi(noteName);
+    vozPiano(midi, ctx ? ctx.currentTime : 0, durSec, vel);
+  }
+
+  function registerHit(noteName, vel){
+    if (!REC || !ctx || PAUSED) return;
+    const now = ctx.currentTime;
+    const tSub = quantizeToSub(now);
+    hits.push({
+      tSub,
+      noteName,
+      vel: Math.max(0.2, Math.min(1.0, vel)),
+      durSub: 1
+    });
+    setRecUI();
+  }
+
+  function updateBalls() {
+    if (PAUSED) return;
+    const { centerY, leftCenterX, rightCenterX, radius } = circlesGeom();
+    updateCircleBalls(bassBalls, leftCenterX, centerY, radius, bassNotes);
+    updateCircleBalls(trebleBalls, rightCenterX, centerY, radius, trebleNotes);
+  }
+
+  function updateCircleBalls(balls, centerX, centerY, radius, notes) {
+    balls.forEach(ball => {
+      ball.x += ball.dx;
+      ball.y += ball.dy;
+
+      const distance = Math.sqrt((ball.x - centerX) ** 2 + (ball.y - centerY) ** 2);
+
+      if (distance + ball.radius >= radius) {
+        const angle = Math.atan2(ball.y - centerY, ball.x - centerX);
+        const arcAngle = (2 * Math.PI) / notes.length;
+        const arcIndex = Math.floor((angle + 2 * Math.PI) % (2 * Math.PI) / arcAngle);
+
+        if (arcIndex >= 0 && arcIndex < notes.length) {
+          const noteName = notes[arcIndex];
+
+          const nowT = ctx ? ctx.currentTime : 0;
+          if (!ball.lastHitT || (nowT - ball.lastHitT) > 0.06) {
+            const speed = Math.hypot(ball.dx, ball.dy);
+            const vel = Math.max(0.25, Math.min(1.0, speed / 10));
+
+            playNoteName(noteName, vel, 0.35);
+            registerHit(noteName, vel);
+
+            ball.lastHitT = nowT;
+          }
+        }
+
+        const normalX = (ball.x - centerX) / distance;
+        const normalY = (ball.y - centerY) / distance;
+        const dotProduct = ball.dx * normalX + ball.dy * normalY;
+        ball.dx = ball.dx - 2 * dotProduct * normalX;
+        ball.dy = ball.dy - 2 * dotProduct * normalY;
+
+        const overlap = distance + ball.radius - radius;
+        ball.x -= overlap * normalX;
+        ball.y -= overlap * normalY;
+      }
+    });
+  }
+
+  function createBall(x, y, dx, dy, circle) {
+    const ballRadius = 12;
+    const palette = circle === 'bass' ? bassNotes : trebleNotes;
+    const pick = palette[Math.floor(Math.random() * palette.length)];
+    const ball = {
+      id: ballSeq++,
+      x, y,
+      radius: ballRadius,
+      dx, dy,
+      color: noteColors[pick],
+      lastHitT: 0
+    };
+    if (circle === 'bass') bassBalls.push(ball);
+    else trebleBalls.push(ball);
+  }
+
+  function animate() {
+    drawCircles();
+    updateBalls();
+    drawBalls();
+    drawPreviewLine();
+    requestAnimationFrame(animate);
+  }
+
+  function canvasPos(evt){
+    const rect = canvas.getBoundingClientRect();
+    return { x: evt.clientX - rect.left, y: evt.clientY - rect.top };
+  }
+
+  canvas.addEventListener('mousedown', (event) => {
+    if (PAUSED) return;
+    const p = canvasPos(event);
+    dragStartX = p.x;
+    dragStartY = p.y;
+
+    const { centerY, leftCenterX, rightCenterX, radius } = circlesGeom();
+    const distToLeft = Math.hypot(dragStartX - leftCenterX, dragStartY - centerY);
+    const distToRight = Math.hypot(dragStartX - rightCenterX, dragStartY - centerY);
+
+    if (distToLeft <= radius) currentCircle = 'bass';
+    else if (distToRight <= radius) currentCircle = 'treble';
+    else currentCircle = null;
+
+    isDragging = !!currentCircle;
+  });
+
+  canvas.addEventListener('mousemove', (event) => {
+    if (PAUSED) return;
+    if (!isDragging) return;
+    const p = canvasPos(event);
+    dragEndX = p.x;
+    dragEndY = p.y;
+  });
+
+  canvas.addEventListener('mouseup', (event) => {
+    if (PAUSED) return;
+    if (!isDragging || !currentCircle) return;
+    const p = canvasPos(event);
+    dragEndX = p.x;
+    dragEndY = p.y;
+
+    const dx = (dragStartX - dragEndX) * 0.1;
+    const dy = (dragStartY - dragEndY) * 0.1;
+
+    createBall(dragStartX, dragStartY, dx, dy, currentCircle);
+
+    isDragging = false;
+    currentCircle = null;
+  });
+
+  // 4) VOLCADO: hits -> notas del pentagrama
+  function durSubToDurName(durSub){
+    if (durSub >= 16) return "whole";
+    if (durSub >= 8) return "half";
+    if (durSub >= 4) return "quarter";
+    if (durSub >= 2) return "eighth";
+    return "sixteenth";
+  }
+
+  function hitsToPentagramaNotes(hitsArr){
+    const out = [];
+    for (const h of hitsArr){
+      const sub = Math.max(0, Math.min(totalSubdivVisibles, h.tSub));
+      const step = clamp(noteNameToStep(h.noteName), -2, 12);
+      out.push({
+        id: out.length + 1,
+        sub: Math.round(sub),
+        step: Math.round(step),
+        dur: durSubToDurName(h.durSub || 1)
+      });
+    }
+    return out;
+  }
+
+  // 5) PAUSE/RESUME ALL (NEW)
+  function pauseAll(){
+    PAUSED = true;
+    isDragging = false;
+    currentCircle = null;
+    drag = null;
+
+    // audio off
+    pauseAudioHard();
+
+    setPausedUI();
+    setRecUI();
+  }
+  function resumeAll(){
+    asegurarAudio();
+    PAUSED = false;
+    resumeAudioHard();
+    setPausedUI();
+  }
+
+  // UI BOTONES
+  const btnBorrar = document.getElementById("modoBorrar");
+  function actualizarUIBorrar() {
+    btnBorrar.textContent = modoBorrar ? "Borrar (activo)" : "Borrar";
+    btnBorrar.style.background = modoBorrar ? "rgba(255,90,90,.12)" : "rgba(255,255,255,.06)";
+  }
+
+  document.getElementById("activar").addEventListener("click", () => {
+    asegurarAudio();
+  });
+
+  // play global
+  document.getElementById("playAll").addEventListener("click", () => {
+    resumeAll();
+    reproducirTodo();
+  });
+
+  // parar global
+  document.getElementById("parar").addEventListener("click", () => {
+    pauseAll();
+  });
+
+  document.getElementById("limpiar").addEventListener("click", () => {
+    notas = [];
+    nextId = 1;
+    borrarGuardado();
+    render();
+  });
+
+  btnBorrar.addEventListener("click", () => {
+    if (PAUSED) return; // NEW
+    modoBorrar = !modoBorrar;
+    actualizarUIBorrar();
+    render();
+  });
+
+  // REC
+  recBtn.addEventListener("click", () => {
+    if (PAUSED) return; // NEW: no cambiar rec en pausa
+    asegurarAudio();
+    REC = !REC;
+    if (REC){
+      hits.length = 0;
+      recStart = ctx.currentTime;
+    }
+    setRecUI();
+  });
+
+  limpiarRecBtn.addEventListener("click", () => {
+    hits.length = 0;
+    setRecUI();
+  });
+
+  volcarBtn.addEventListener("click", () => {
+    if (!hits.length) return;
+    const newNotas = hitsToPentagramaNotes(hits);
+    setNotasExternas(newNotas, false);
+    try { previsualizar(newNotas[0]); } catch {}
+  });
+
+  // ARRANQUE
+  cargar();
+  actualizarUIBorrar();
+  render();
+  setRecUI();
+  setPausedUI();
+  animate();
+})();
+</script>
+</body>
+</html>
+

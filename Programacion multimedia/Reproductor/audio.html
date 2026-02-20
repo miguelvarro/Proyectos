@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Audio · Player personalizado</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/audio.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="back" href="index.html">← Inicio</a>
+    <h1>Audio</h1>
+    <p class="muted">Controles personalizados (progreso, volumen, velocidad)</p>
+  </header>
+
+  <main class="container">
+    <section class="panel">
+      <div class="audio-head">
+        <button id="aPlay" class="primary circle">▶</button>
+        <div>
+          <div class="title" id="trackTitle">Tema</div>
+          <div class="muted" id="trackArtist">Artista</div>
+        </div>
+      </div>
+
+      <!-- Waveform -->
+      <div class="waveform-container">
+        <div class="waveform-background"></div>
+        <img src="assets/img/waveforms/0802.png" class="waveform-image" alt="Waveform"> -->
+        <div class="waveform-progress-mask" id="waveMask"></div>
+        <div class="waveform-overlay"></div>
+      </div>
+
+      <audio id="audio" preload="metadata"></audio>
+
+      <div class="controls">
+        <input id="aSeek" type="range" min="0" max="1000" value="0" class="seek" />
+        <div class="time">
+          <span id="aCur">0:00</span>
+          <span class="muted">/</span>
+          <span id="aDur">0:00</span>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label class="muted small">Volumen</label>
+            <input id="aVol" type="range" min="0" max="1" step="0.01" value="1" />
+          </div>
+
+          <div class="field">
+            <label class="muted small">Velocidad</label>
+            <select id="aRate">
+              <option value="0.5">0.5x</option>
+              <option value="0.75">0.75x</option>
+              <option value="1" selected>Normal</option>
+              <option value="1.25">1.25x</option>
+              <option value="1.5">1.5x</option>
+              <option value="2">2x</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel warn" id="audioWarn" style="display:none"></div>
+    </section>
+  </main>
+
+  <script src="js/utils.js"></script>
+  <script src="js/audioPlayer.js"></script>
+</body>
+</html>
+

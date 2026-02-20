@@ -1,0 +1,39 @@
+.audio-head{display:flex;align-items:center;gap:14px}
+.title{font-size:18px;font-weight:800}
+
+.controls{margin-top:10px;display:flex;flex-direction:column;gap:10px}
+.seek{width:100%;accent-color:var(--primary)}
+.time{display:flex;justify-content:space-between;color:var(--muted);font-size:13px}
+
+.field{display:flex;flex-direction:column;gap:6px;flex:1}
+.field input,.field select{
+  border:1px solid var(--border);
+  border-radius:12px;
+  background:rgba(0,0,0,.18);
+  color:var(--text);
+  padding:10px;
+}
+.field input{accent-color:var(--primary)}
+
+.waveform-container{
+  position:relative;
+  width:100%;
+  height:80px;
+  margin:14px 0 6px;
+  border-radius:14px;
+  overflow:hidden;
+  background:rgba(255,255,255,.06);
+  border:1px solid var(--border);
+}
+.waveform-background{
+  position:absolute;inset:0;
+  background:linear-gradient(90deg, rgba(255,255,255,.07), rgba(255,255,255,.03));
+}
+.waveform-progress-mask{
+  position:absolute;top:0;right:0;height:100%;
+  width:100%;
+  background:rgba(15,17,21,.75);
+  transition:width .08s linear;
+}
+.waveform-overlay{position:absolute;inset:0;background:rgba(255,255,255,.06);pointer-events:none}
+

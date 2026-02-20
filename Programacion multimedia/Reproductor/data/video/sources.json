@@ -1,0 +1,9 @@
+{
+  "input_file": "Baddadan.mp4",
+  "renditions": [
+    { "label": "720p", "path": "media/video/Baddadan.mp4" },
+    { "label": "480p", "path": "media/video/Baddadan.mp4" },
+    { "label": "360p", "path": "media/video/Baddadan.mp4" }
+  ]
+}
+
