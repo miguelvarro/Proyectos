@@ -1,0 +1,329 @@
+Proyecto: Server Control Center
+
+Monitorización de recursos y administrador del servidor
+
+1️⃣ Descripción general del proyecto
+
+El proyecto consiste en un sistema completo de monitorización y administración básica de un servidor local. Está dividido en dos grandes módulos:
+
+Monitor de recursos del servidor
+
+Administrador del servidor
+
+La arquitectura combina:
+
+🐍 Python → recolección de métricas
+
+🐘 PHP → visualización, API y administración
+
+📁 CSV → persistencia ligera de datos
+
+🔐 Basic Auth → protección de endpoints
+
+El sistema permite no solo visualizar métricas, sino también controlar el proceso que las genera, lo que convierte el proyecto en algo más avanzado que un simple dashboard.
+
+2️⃣ Arquitectura del sistema
+🔹 Flujo general
+server_monitor.py  →  genera CSV en monitor_data/
+                        ↓
+monitor.php        →  lee CSV y muestra gráficas / API JSON
+                        ↓
+admin.php          →  arranca/parar monitor + estado servidor
+                        ↓
+monitor_runner.py  →  gestiona proceso + PID
+
+3️⃣ Explicación técnica de cada componente
+🐍 3.1 server_monitor.py (Motor de monitorización)
+
+Es el núcleo del sistema.
+
+Qué hace:
+
+Se ejecuta en bucle infinito.
+
+Cada X segundos recoge métricas del sistema.
+
+Guarda los datos en archivos CSV.
+
+Métricas recogidas:
+
+CPU (%)
+
+RAM (%)
+
+Uso de disco (%)
+
+IO disco (bytes/s)
+
+Bandwidth red (bytes/s)
+
+Número de procesos
+
+Tasa de peticiones Apache (si detecta access.log)
+
+Formato CSV:
+
+Cada archivo sigue el mismo esquema:
+
+ts_iso, epoch, value
+2026-02-19T12:01:10,1708347670,12.000000
+
+
+Esto permite:
+
+Filtrar por rango de fechas
+
+Dibujar gráficas
+
+Exportar fácilmente
+
+Aspecto importante:
+
+Usa psutil si está disponible.
+
+Si no, tiene fallback con comandos del sistema.
+
+Está diseñado para no depender de librerías externas obligatorias.
+
+🧠 3.2 monitor_runner.py (Gestor del servicio)
+
+Es una capa de control profesional sobre el monitor.
+
+Funciones:
+
+start
+
+stop
+
+status
+
+Qué hace técnicamente:
+
+Lanza server_monitor.py en segundo plano.
+
+Guarda el PID en un archivo.
+
+Permite detenerlo correctamente.
+
+Genera logs.
+
+Esto evita:
+
+Procesos “huérfanos”
+
+Bloqueos de archivos
+
+Errores al reiniciar
+
+Es una mejora importante frente a ejecutar directamente Python desde PHP.
+
+🌐 3.3 monitor.php (Dashboard + API)
+
+Cumple dos funciones:
+
+A) Dashboard visual
+
+Lee los CSV.
+
+Filtra por rango temporal.
+
+Dibuja gráficas SVG sin librerías externas.
+
+Permite auto-refresh configurable.
+
+B) API JSON
+
+Endpoint:
+
+monitor.php?endpoint=cpu&from=...&to=...
+
+
+Devuelve:
+
+{
+  "ok": true,
+  "endpoint": "cpu",
+  "count": 120,
+  "points": [...]
+}
+
+
+La API está protegida mediante Basic Authentication.
+
+Esto convierte el monitor en un servicio reutilizable.
+
+🛠 3.4 admin.php (Administrador del servidor)
+
+Es el módulo activo del sistema.
+
+Funcionalidades:
+
+Ver estado del servidor:
+
+SO
+
+PHP
+
+Disco
+
+Rutas
+
+Estado del monitor
+
+Arrancar monitor
+
+Parar monitor
+
+Ver logs del sistema
+
+Ver procesos (bajo demanda)
+
+Kill PID (desactivado por seguridad)
+
+Mejora técnica importante:
+
+Se ejecuta el runner en segundo plano usando:
+
+cmd /c start "" /B ...
+
+
+Esto evita que PHP se quede bloqueado esperando a que termine el proceso.
+
+⚙ 3.5 config.php
+
+Centraliza:
+
+Usuarios y contraseñas
+
+Rutas
+
+Intervalos
+
+Endpoints permitidos
+
+Esto mejora:
+
+Mantenibilidad
+
+Seguridad
+
+Escalabilidad
+
+4️⃣ Funcionalidades añadidas (respecto a un monitor básico)
+
+Tu proyecto no es solo “ver CPU”.
+
+Incluye mejoras reales:
+
+✅ 1. Administrador activo del monitor
+
+No solo visualiza datos, sino que:
+
+Arranca el servicio
+
+Lo detiene
+
+Verifica si está en ejecución
+
+Controla su PID
+
+Esto lo convierte en un sistema de administración real.
+
+✅ 2. Runner independiente
+
+Separar server_monitor.py de su gestor:
+
+Evita bloqueos.
+
+Mejora estabilidad.
+
+Permite control limpio del proceso.
+
+Esto es arquitectura profesional.
+
+✅ 3. API JSON protegida
+
+No solo hay interfaz gráfica.
+
+Hay una API protegida por Basic Auth que:
+
+Permite consumir métricas desde otros sistemas.
+
+Simula un servicio REST real.
+
+✅ 4. Persistencia estructurada en CSV
+
+No es solo mostrar datos en memoria.
+
+Se guardan en:
+
+monitor_data/
+
+
+Con formato uniforme y reutilizable.
+
+✅ 5. Logs del administrador
+
+Cada acción queda registrada:
+
+Arranque
+
+Parada
+
+Kill proceso
+
+Esto aporta trazabilidad.
+
+✅ 6. Protección contra bloqueos en Windows
+
+Se implementaron mejoras para:
+
+Evitar WMI que bloquea.
+
+Evitar carga automática de procesos.
+
+Ejecutar comandos en segundo plano.
+
+Eso mejora estabilidad real.
+
+5️⃣ Nivel técnico del proyecto
+
+Este proyecto demuestra:
+
+Gestión de procesos en segundo plano.
+
+Comunicación entre Python y PHP.
+
+Diseño modular.
+
+Persistencia estructurada.
+
+Seguridad básica.
+
+Administración de servicios.
+
+Visualización de métricas.
+
+Manejo de permisos y bloqueo de archivos.
+
+No es un simple ejercicio de clase.
+Es un sistema completo de monitorización local.
+
+6️⃣ Estado actual del proyecto
+
+✔ Monitor funcional
+✔ Dashboard con gráficas
+✔ API protegida
+✔ Administrador funcional
+✔ Runner estable
+✔ Logs
+✔ Control de procesos
+✔ Configuración centralizada
+
+El proyecto está completo y correctamente ampliado.
+
+Si quieres, en el siguiente mensaje puedo prepararte:
+
+Versión resumida para defensa oral (2–3 minutos)
+
+O versión formal tipo memoria técnica lista para entregar.

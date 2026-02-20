@@ -1,0 +1,171 @@
+Mini Vault es una mini aplicación web en PHP para demostrar los fundamentos de encriptación (entendidos como conceptos básicos de tratamiento seguro de datos):
+
+Base64: codifica/descodifica texto (útil para transporte/serialización, no es seguridad).
+
+Hash (MD5/SHA1): genera una huella unidireccional del texto (integridad).
+
+Cifrado básico (Shift): “encripta” y “desencripta” aplicando un desplazamiento sobre los bytes (reversible con la misma clave shift).
+
+Historial de operaciones en la sesión del usuario.
+
+Funcionalidades extra: verificación de hash e exportación del historial a JSON/CSV.
+
+Explicación del código (por bloques)
+1) Arranque y sesión
+session_start();
+
+
+Se usa sesión para guardar el historial de operaciones mientras el navegador esté abierto (o hasta borrar historial).
+
+2) Clase Encriptador (cifrado básico)
+class Encriptador {
+  private int $shift;
+
+  public function encriptar(string $texto): string { ... }
+  public function desencriptar(string $texto): string { ... }
+}
+
+
+La “clave” es el shift (por defecto 5).
+
+encriptar() desplaza cada carácter sumando shift.
+
+desencriptar() hace lo contrario restando shift.
+
+Se trabaja byte a byte con ord() y chr() y se usa & 0xFF para mantener el valor en 0–255 (evita errores al “pasarse” de rango).
+
+Esto implementa un cifrado muy simple tipo César/shift, perfecto para “encriptar básico”.
+
+3) Helpers (utilidades)
+
+Funciones clave:
+
+h() escapa HTML para evitar que el usuario “inyecte” HTML/JS en la página.
+
+add_history() guarda en $_SESSION['history']:
+
+fecha (ts)
+
+tipo de operación (tipo)
+
+entrada y salida
+
+extra (por ejemplo shift, hash_esperado, resultado de la verificación)
+
+normalize_hash() normaliza el hash esperado (trim + lower) para comparar sin problemas de mayúsculas/espacios.
+
+hash_equals_safe() compara dos hashes de forma segura (usa hash_equals si existe; si no, fallback).
+
+4) Exportación del historial (JSON/CSV)
+
+Antes de pintar HTML, el script detecta si se está pidiendo exportar:
+
+?export=json
+
+Devuelve el historial con json_encode(...)
+
+Añade headers para que el navegador lo descargue como archivo
+
+?export=csv
+
+Genera un CSV con fputcsv()
+
+Incluye BOM UTF-8 (para que Excel lo abra bien con acentos)
+
+Esto convierte tu proyecto en algo “más completo” y reutilizable: no solo calcula, también registra y exporta.
+
+5) Procesamiento principal (switch por “modo”)
+
+En el POST, se lee:
+
+modo (qué operación hacer)
+
+texto (entrada)
+
+shift (solo cifrado)
+
+hash_esperado (solo verificación)
+
+Y se ejecuta un switch ($modo):
+
+Base64
+
+base64_encode: base64_encode($texto)
+
+base64_decode: base64_decode($texto, true) (modo estricto → si es inválido da error)
+
+Hash
+
+hash_md5: md5($texto)
+
+hash_sha1: sha1($texto)
+
+Verificación hash
+
+verify_md5:
+
+calcula md5($texto)
+
+compara con el hash esperado normalizado
+
+genera mensaje ✅/❌ y guarda en historial el resultado
+
+verify_sha1: igual pero con sha1
+
+Cifrado básico
+
+cipher_encrypt: Encriptador($shift)->encriptar($texto)
+
+cipher_decrypt: Encriptador($shift)->desencriptar($texto)
+
+Además, en cada operación (si no hay error) se llama a add_history(...).
+
+6) Interfaz (HTML + CSS + JS)
+
+El CSS sigue tu estilo: negro + naranja, cards, bordes suaves y una estética “panel”.
+
+Se divide en 3 zonas:
+
+Entrada + selección de modo
+
+Salida (resultado)
+
+Historial con botones de exportación
+
+JS de UX
+
+Si el modo no es cifrado, deshabilita shift.
+
+Si el modo no es verificación, oculta el campo “hash esperado”.
+Esto hace que la UI sea más clara y evita confusiones.
+
+Funcionalidades añadidas (las “extra” que te pedían)
+1) Verificación de integridad mediante hash (MD5/SHA1)
+
+Qué aporta: ya no solo generas hashes, sino que demuestras su uso real:
+
+Si cambias el texto aunque sea 1 carácter, el hash cambia ⇒ se detecta manipulación.
+
+Cómo se usa:
+
+Pones el texto
+
+Pegas el hash esperado
+
+El sistema calcula y compara ⇒ ✅ coincide / ❌ no coincide
+
+Esto es literalmente “integridad” aplicada.
+
+2) Exportación del historial a JSON y CSV
+
+Qué aporta: persistencia “usable”:
+
+Puedes entregar evidencias del funcionamiento (operaciones realizadas)
+
+Puedes abrir CSV en Excel o importar JSON en otro sistema
+
+Cómo se usa:
+
+Botón “Exportar JSON”
+
+Botón “Exportar CSV”
