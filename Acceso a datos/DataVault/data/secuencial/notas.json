@@ -1,0 +1,22 @@
+[
+  {
+    "alumno": "Miguel",
+    "asignatura": "Matemáticas",
+    "nota": 8.5
+  },
+  {
+    "alumno": "Betlem",
+    "asignatura": "Física",
+    "nota": 9.0
+  },
+  {
+    "alumno": "Miguel",
+    "asignatura": "Matemáticas",
+    "nota": 8.5
+  },
+  {
+    "alumno": "Betlem",
+    "asignatura": "Física",
+    "nota": 9.0
+  }
+]
