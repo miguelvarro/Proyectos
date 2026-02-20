@@ -1,0 +1,313 @@
+Qué hace el proyecto (visión general)
+
+Es un diario de recuerdos tipo Memento donde cada recuerdo se guarda con:
+
+campos sensoriales (vista, oído, olfato, sabor, tacto…),
+
+contexto (fecha/momento, ubicación),
+
+reflexión (lecciones),
+
+y un “perfil emocional” (6 emociones 0–10).
+
+Cada recuerdo se representa en el canvas como una burbuja 3D fake:
+
+su color interno mezcla las emociones,
+
+su halo y su borde se basan en la emoción dominante,
+
+su tamaño/blur/transparencia dependen de una coordenada Z simulada,
+
+se mueve con “física suave” (repulsión/atracción), y además reacciona al cursor.
+
+El sistema ya es un CRUD completo:
+
+Crear (formulario)
+
+Leer (cargar y visualizar)
+
+Editar (desde el modal, precarga formulario)
+
+Eliminar (desde el modal)
+
+Y además añade “features de producto”:
+
+filtros por fecha, ubicación y emoción dominante,
+
+exportar/importar recuerdos (portabilidad),
+
+tooltip al hover (resumen sin abrir modal).
+
+Estructura del código por archivos
+1) index.html
+
+Panel izquierdo con el formulario (crear/editar).
+
+Buscador por texto para “conectar” recuerdos (visualiza relaciones).
+
+Bloque nuevo de filtros + export/import.
+
+Zona derecha (.stage-wrap) con el canvas.
+
+Modal con contenido del recuerdo y botones nuevos: Editar y Eliminar.
+
+Añadido clave en HTML
+
+<input type="hidden" id="_id"> para saber si el submit es creación o edición.
+
+Botones:
+
+#saveBtn (texto cambia “Guardar” / “Guardar cambios”)
+
+#cancelEditBtn (sale de edición)
+
+#editBtn y #deleteBtn en el modal
+
+#exportBtn, #importBtn e #importFile para JSON
+
+2) guardar_recuerdos.php
+
+Antes: solo GET (leer) y POST (añadir).
+Ahora: API CRUD + import/export sobre recuerdos.json.
+
+Rutas y métodos
+
+GET guardar_recuerdos.php
+
+devuelve el array completo de recuerdos.
+
+GET guardar_recuerdos.php?download=1
+
+igual que arriba, pero añade header para descargar como archivo (Exportar).
+
+POST guardar_recuerdos.php
+
+crea un recuerdo nuevo (asegura _id).
+
+PUT guardar_recuerdos.php
+
+edita un recuerdo existente por _id (reemplazo completo del objeto).
+
+DELETE guardar_recuerdos.php?id=...
+
+elimina por _id.
+
+POST guardar_recuerdos.php con { action:"import", items:[...] }
+
+importa y deduplica por _id (si existe, actualiza; si no, inserta).
+
+Detalles importantes
+
+LOCK_EX al escribir JSON → evita corrupción si hay escrituras simultáneas.
+
+ensure_id() → si falta _id lo genera (robusto para imports).
+
+3) styles.css
+
+Mantiene tu estética Naruto del panel, y mejora el escenario:
+
+Añadido destacado
+
+.stage-wrap::before → “aura” animada (rotación + respiración)
+
+.stage-wrap::after → grain + scanlines con drift
+Esto hace que el fondo “viva” y el canvas se sienta más inmersivo.
+
+4) scripts.js (núcleo: visual + lógica)
+
+Tu JS se puede entender como 6 módulos:
+
+1) Datos emocionales + utilidades
+
+EMO: paleta y etiquetas.
+
+Mezcla de colores:
+
+bubbleColorFromEmotions() genera el color resultante según sliders.
+
+Dominancia emocional:
+
+dominantEmotion() devuelve emoción con valor más alto → usada para halo y borde.
+
+Helpers: clamp01, lerp, rgbToCss.
+
+Impacto visual
+
+El interior de la burbuja usa el color mezcla.
+
+El borde/halo usan el color dominante.
+
+2) UI de emociones + voz
+
+setupEmotionUI() sincroniza sliders con sus valores (val_*).
+
+Voz con webkitSpeechRecognition:
+
+cada botón 🎤 escribe en su campo.
+
+3) Modal + selección
+
+showMemoryModal(memory) llena el modal y guarda referencia en selectedMemory.
+
+Botones nuevos del modal:
+
+Editar: precarga formulario y activa modo edición.
+
+Eliminar: llama DELETE al PHP y borra la partícula en cliente.
+
+4) Motor “burbujas 3D fake” (canvas)
+a) Profundidad simulada (Z)
+
+Cada partícula tiene z en [0..1]:
+
+depthScale(z) → burbuja más grande si está “cerca”
+
+depthBlur(z) → más blur si está “lejos”
+
+depthAlpha(z) → más transparente si está “lejos”
+
+depthParallax(z) → parallax más fuerte si está “cerca”
+
+Además vz hace una deriva suave (no se queda congelada en el espacio).
+
+b) Parallax del escenario
+
+En pointermove se calcula un vector normalizado del cursor y se suaviza.
+
+projectedPos(p) aplica ese offset en función de Z → da sensación 3D.
+
+5) Física del movimiento + cursor “gel”
+
+Cada partícula aplica fuerzas:
+
+a) Interacciones entre burbujas
+
+Repulsión fuerte cerca (distMin + kRepelClose)
+
+Repulsión media/larga (kRepelMid, kRepelOuter)
+
+Cuando hay búsqueda:
+
+“activas” (score>0) se atraen y se agrupan hacia el centro.
+
+b) Drift (ruido suave)
+
+driftForce() mete oscilación con sin/cos basada en una seed.
+Resultado: nunca se quedan “muertas”.
+
+c) Cursor repelente “gel suave”
+
+cursorForce() repele pero:
+
+tiene dead-zone para permitir click,
+
+se desactiva durante ~160ms tras pointerdown (freezeUntil),
+
+y solo empuja “bien” cuando el cursor se mueve (factor de movimiento).
+Esto hace que parezca un campo de fuerza suave sin frustrar el usuario.
+
+6) Render avanzado de burbuja
+
+Dentro de drawBubble():
+
+Sombra elíptica → volumen.
+
+Base glass con gradiente radial → vidrio.
+
+Tint emocional en modo multiply → color dentro.
+
+Rim light (screen) → borde iluminado suave.
+
+Borde destacado:
+
+si está seleccionada o matcheada, el borde usa color de emoción dominante.
+
+Glint orbitando:
+
+brillo principal gira lento con time + seed.
+
+Segundo highlight:
+
+brillo pequeño en lado opuesto para aumentar “3D”.
+
+Además:
+
+drawHalo() genera un halo pulsante (screen + blur).
+
+drawConnections() dibuja líneas entre recuerdos “relacionados” por búsqueda.
+
+7) Tooltip (vista resumen sin modal)
+
+En hover se detecta la partícula “más cercana” (orden por z).
+
+drawTooltip() muestra:
+
+fecha
+
+ubicación
+
+inicio de “vista”
+Esto te da una “vista rápida” sin abrir modal.
+
+8) CRUD: editar, guardar, eliminar
+Edición
+
+editingId controla si estás editando.
+
+fillFormFromMemory() precarga inputs y emociones.
+
+setFormMode(true/false) cambia título y botones.
+
+Submit:
+
+POST si es nuevo
+
+PUT si es edición
+
+Al editar, se actualiza:
+
+objeto en memories
+
+propiedades de la partícula (tokens, tint, domColor, domValue, y z)
+
+Eliminación
+
+DELETE guardar_recuerdos.php?id=...
+
+se eliminan de memories y particles.
+
+9) Filtros (sin IA, pero “smart”)
+
+Se filtra a nivel cliente con p.visible:
+
+rango de fechas (dateFrom, dateTo)
+
+ubicación contiene (locFilter)
+
+emoción dominante (emoKey)
+
+umbral mínimo (emoMin)
+
+applyFilters() marca visibles/no visibles y el render respeta eso:
+
+no dibuja burbujas invisibles
+
+no dibuja conexiones con invisibles
+
+hover/click también ignoran invisibles
+
+10) Export / Import
+
+Export:
+
+descarga recuerdos.json desde GET ?download=1
+
+Import:
+
+subes JSON
+
+manda {action:"import", items} por POST al PHP
+
+PHP deduplica por _id
+
+JS recarga con loadMemories() para reconstruir partículas y tokens

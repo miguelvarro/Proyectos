@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Proyecto Voz + Cámara + MediaPipe + AR</title>
+  <link rel="stylesheet" href="./css/styles.css" />
+
+  <!-- MediaPipe (según tu material) -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+
+  <!-- A-Frame + AR.js -->
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js/aframe/build/aframe-ar.js"></script>
+</head>
+
+<body>
+  <header class="topbar">
+    <div class="brand">Proyecto: Voz + MediaPipe + AR</div>
+
+    <div class="controls">
+      <button id="btnVoice" class="btn">🎙️ Escuchar</button>
+      <button id="btnHands" class="btn">🖐️ Manos: OFF</button>
+      <button id="btnAR" class="btn">🥽 AR: OFF</button>
+      <button id="btnStopAll" class="btn btnDanger">⛔ Parar Cámara</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <!-- Panel de estado / debug -->
+    <section class="panel">
+      <h2>Estado</h2>
+
+      <div class="kv">
+        <div class="k">Última voz:</div>
+        <div class="v" id="uiLastTranscript">—</div>
+      </div>
+
+      <div class="kv">
+        <div class="k">Operación:</div>
+        <div class="v" id="uiLastCommand">—</div>
+      </div>
+
+      <div class="kv">
+        <div class="k">Parámetro:</div>
+        <div class="v" id="uiLastParam">—</div>
+      </div>
+
+      <div class="kv">
+        <div class="k">Gesto manos:</div>
+        <div class="v" id="uiLastGesture">—</div>
+      </div>
+
+      <div class="kv">
+        <div class="k">Modo cámara:</div>
+        <div class="v" id="uiCameraMode">NINGUNO</div>
+      </div>
+
+      <h3>Clientes (demo tipo tu ejemplo)</h3>
+      <div id="clientesBox"></div>
+
+      <h3>Comandos de voz (ejemplos)</h3>
+      <ul class="help">
+        <li><strong>"leer"</strong> / <strong>"leer clientes"</strong></li>
+        <li><strong>"insertar"</strong> / <strong>"insertar cliente"</strong></li>
+        <li><strong>"editar"</strong> / <strong>"editar cliente"</strong></li>
+        <li><strong>"actualizar uno"</strong> / <strong>"actualizar dos"</strong></li>
+        <li><strong>"eliminar cero"</strong> / <strong>"eliminar tres"</strong></li>
+        <li><strong>"activar manos"</strong> / <strong>"desactivar manos"</strong></li>
+        <li><strong>"activar ar"</strong> / <strong>"desactivar ar"</strong></li>
+        <li><strong>"mostrar cubo"</strong> / <strong>"ocultar cubo"</strong></li>
+        <li><strong>"color rojo|verde|azul|amarillo|blanco"</strong></li>
+        <li><strong>"parar"</strong> / <strong>"stop"</strong></li>
+      </ul>
+
+      <p class="note">
+        Consejo: usa HTTPS o <code>localhost</code> para que el navegador permita micrófono/cámara.
+      </p>
+    </section>
+
+    <!-- Zona Cámara / MediaPipe -->
+    <section class="stage">
+      <h2>MediaPipe Hands</h2>
+
+      <video id="mpVideo" autoplay playsinline muted class="hidden"></video>
+      <canvas id="mpCanvas" width="640" height="480" class="canvas"></canvas>
+
+      <div class="hint">
+        Activa <strong>Manos</strong> para ver landmarks y detección simple de gesto.
+      </div>
+    </section>
+
+    <!-- Zona AR -->
+    <section class="stage">
+      <h2>Realidad Aumentada (AR.js + HIRO)</h2>
+      <div id="arMount" class="arMount">
+        <div class="hint">
+          Activa <strong>AR</strong>, permite cámara y apunta al marcador <strong>HIRO</strong>.
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Scripts del proyecto -->
+  <script src="./js/state.js"></script>
+  <script src="./js/voice.js"></script>
+  <script src="./js/mediapipe-hands.js"></script>
+  <script src="./js/ar-scene.js"></script>
+  <script src="./js/app.js"></script>
+</body>
+</html>
+
