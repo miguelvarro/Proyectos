@@ -1,0 +1,189 @@
+💬 Proyecto 2 — micro-ChatGPT (Flask + Ollama + Persistencia)
+1️⃣ Descripción general
+
+Aplicación web tipo ChatGPT que:
+
+Usa Ollama como backend LLM
+
+Permite selección dinámica de modelo
+
+Tiene sistema de usuarios
+
+Login / registro
+
+Persistencia de conversaciones
+
+Base de datos SQLite
+
+Interfaz personalizada (tema Pain/Naruto)
+
+Es un chat multiusuario con almacenamiento estructurado.
+
+2️⃣ Arquitectura
+Frontend (HTML + JS + CSS)
+        │
+        ▼
+Flask API (app.py)
+        │
+        ├── auth.py
+        ├── db.py
+        └── SQLite (microchatgpt.db)
+              │
+              ▼
+           Ollama
+
+3️⃣ Base de datos
+
+Tablas:
+
+users
+
+id
+
+username
+
+password_hash
+
+created_at
+
+sessions
+
+token
+
+user_id
+
+conversations
+
+id
+
+user_id
+
+title
+
+model
+
+messages
+
+id
+
+conversation_id
+
+role (user/assistant/system)
+
+content
+
+Relación:
+
+User → Conversations → Messages
+
+4️⃣ Backend (Flask)
+
+Responsabilidades:
+
+Registro usuario
+
+Login
+
+Gestión token sesión
+
+Crear conversación
+
+Guardar mensajes
+
+Enviar prompt a Ollama
+
+Devolver respuesta
+
+Listar modelos disponibles
+
+5️⃣ Frontend
+
+Funciones implementadas:
+
+Envío con Enter
+
+Shift+Enter para salto
+
+Limpieza automática de textarea
+
+Cambio dinámico de modelo
+
+UI estilo Pain
+
+Logo personalizado
+
+Persistencia visual del chat
+
+6️⃣ Flujo completo
+
+Usuario se registra.
+
+Se crea sesión.
+
+Envía mensaje.
+
+Backend:
+
+Guarda mensaje usuario.
+
+Llama a Ollama.
+
+Guarda respuesta.
+
+Conversación queda persistida.
+
+7️⃣ Nivel técnico alcanzado
+
+Incluye:
+
+Autenticación segura (hash contraseña)
+
+Token de sesión
+
+Persistencia completa
+
+Cambio dinámico de modelo
+
+UI personalizada
+
+Integración local con LLM
+
+Arquitectura backend limpia
+
+Es un mini-ChatGPT completo funcional.
+
+📊 Comparativa entre ambos proyectos
+Proyecto	Nivel
+micro-ChatGPT	Fullstack LLM app
+Similitudes + RAG	Sistema semántico avanzado
+
+Uno es aplicación interactiva multiusuario.
+El otro es sistema semántico profesional tipo backend IA.
+
+🎯 Conclusión
+
+Has construido:
+
+🔥 Un sistema RAG completo con:
+
+embeddings
+
+vector DB
+
+re-ranking
+
+evaluación automática
+
+⚡ Un ChatGPT web con:
+
+login
+
+base de datos
+
+persistencia
+
+multi-modelo
+
+UI personalizada
+
+Sinceramente, el conjunto de ambos proyectos ya está a nivel muy sólido.

@@ -1,0 +1,322 @@
+📘 MADataSuite
+Proyecto: Clase personalizada de conexión y acceso a datos
+1️⃣ Descripción general del proyecto
+
+MADataSuite es un sistema modular que implementa una arquitectura completa de acceso a datos basada en tres niveles de abstracción:
+
+Motor propio tipo SQL (MASQL) basado en ficheros CSV.
+
+Conector personalizado a MySQL real (MADB).
+
+Capa tipo ORM (MAORM) para mapear estructuras complejas (JSON ↔ tabla).
+
+Versión multiplataforma en PHP (MADB.php) reutilizando el mismo diseño.
+
+El proyecto demuestra dominio tanto del acceso directo a bases de datos como del diseño de capas de abstracción y persistencia de objetos.
+
+2️⃣ Arquitectura del sistema
+
+El sistema está dividido en tres capas conceptuales:
+
+┌───────────────────────────────┐
+│        Aplicación (CLI)       │
+│          main.py              │
+└───────────────┬───────────────┘
+                │
+        ┌───────┼────────┬──────────────┐
+        │       │        │              │
+     MASQL    MADB     MAORM        MADB.php
+ (Motor CSV) (MySQL) (ORM JSON)   (PHP MySQL)
+
+
+Cada capa tiene un propósito diferente:
+
+Componente	Nivel	Función
+MASQL	Bajo	Motor propio basado en CSV
+MADB (Python)	Medio	Conector personalizado a MySQL
+MAORM	Alto	Capa de mapeo objeto ↔ tabla
+MADB (PHP)	Medio	Versión PHP del conector
+3️⃣ Explicación detallada de cada componente
+🔹 A) MASQL – Motor SQL personalizado
+Ubicación:
+
+python/engine/MASQL.py
+
+Qué es
+
+Un motor propio que simula el funcionamiento básico de un sistema gestor de bases de datos utilizando:
+
+Carpetas → bases de datos
+
+Archivos CSV → tablas
+
+Qué implementa
+1. SHOW DATABASES;
+
+Lista carpetas dentro del directorio raíz.
+
+def _show_databases(self):
+
+2. USE <db>;
+
+Selecciona o crea la base de datos (carpeta).
+
+def _use(self, sql):
+
+3. SHOW TABLES;
+
+Lista archivos CSV dentro de la base seleccionada.
+
+def _show_tables(self):
+
+4. INSERT INTO ... VALUES ...
+
+Usa expresiones regulares para parsear la sentencia.
+
+Divide correctamente tuplas respetando comillas.
+
+Genera CSV si no existe.
+
+Escribe cabecera automáticamente si es la primera vez.
+
+def _insert(self, sql):
+
+5. SELECT * FROM tabla;
+
+Lee CSV con csv.DictReader
+
+Devuelve lista de diccionarios
+
+def _select(self, sql):
+
+Qué demuestra MASQL
+
+Comprensión de cómo funciona internamente un SGBD.
+
+Manejo de parsing SQL básico.
+
+Persistencia estructurada en CSV.
+
+Simulación de tablas y bases sin depender de MySQL.
+
+🔹 B) MADB (Python) – Conector personalizado MySQL
+Ubicación:
+
+python/connectors/MADB.py
+
+Qué es
+
+Una clase que encapsula la conexión a MySQL y proporciona una API limpia de acceso a datos.
+
+Constructor
+def __init__(self, host, usuario, contrasena, basedatos, port=3306)
+
+
+Establece conexión usando:
+
+mysql.connector.connect(...)
+
+
+El cursor se crea como:
+
+self.cursor = self.conexion.cursor(dictionary=True)
+
+
+Esto permite devolver resultados como diccionarios.
+
+Métodos principales
+seleccionar(tabla)
+SELECT * FROM tabla
+
+
+Devuelve JSON formateado.
+
+buscar(tabla, columna, valor)
+SELECT * FROM tabla WHERE columna LIKE %valor%
+
+
+Usa prepared statements → evita inyección SQL.
+
+tablas()
+
+Ejecuta:
+
+SHOW TABLES
+
+
+Y devuelve lista de nombres.
+
+insertar(tabla, datos_dict)
+
+Construye dinámicamente:
+
+INSERT INTO tabla (col1, col2) VALUES (%s, %s)
+
+
+Demuestra generación dinámica de SQL.
+
+Qué demuestra MADB
+
+Encapsulación de conexión.
+
+API propia reutilizable.
+
+Seguridad básica con parámetros.
+
+Abstracción sobre MySQL.
+
+🔹 C) MAORM – ORM ligero basado en JSON
+Ubicación:
+
+python/orm/MAORM.py
+
+Qué es
+
+Una capa que permite persistir estructuras complejas usando una columna JSON.
+
+create_table_clientes()
+
+Crea tabla:
+
+emails JSON
+
+
+Demuestra uso de tipo JSON nativo de MySQL.
+
+insert_cliente(cliente)
+
+Convierte:
+
+cliente["emails"] → json.dumps(...)
+
+
+Guarda estructura compleja en una sola columna.
+
+fetch_clientes()
+
+Recupera filas y reconstruye:
+
+json.loads(fila[3])
+
+Qué demuestra MAORM
+
+Persistencia de objetos complejos.
+
+Serialización/deserialización JSON.
+
+Concepto básico de ORM.
+
+Abstracción superior a SQL.
+
+🔹 D) MADB.php – Conector en PHP
+Ubicación:
+
+php/MADB.php
+
+Qué es
+
+Versión PHP del conector personalizado.
+
+Métodos implementados
+
+seleccionar()
+
+buscar()
+
+tablas()
+
+Utiliza:
+
+mysqli
+
+
+Y prepared statements para seguridad.
+
+Qué demuestra
+
+Diseño multiplataforma.
+
+Arquitectura independiente del lenguaje.
+
+Reutilización del patrón de acceso a datos.
+
+4️⃣ main.py – Punto de entrada del sistema
+Ubicación:
+
+python/main.py
+
+Qué hace
+
+Permite elegir backend mediante:
+
+--modo masql
+--modo madb
+--modo maorm
+
+
+Y acción:
+
+--accion init
+--accion seed
+--accion list
+--accion search
+
+Qué demuestra
+
+Separación de lógica y ejecución.
+
+Arquitectura modular.
+
+Interfaz de pruebas unificada.
+
+5️⃣ Flujo de ejecución
+
+Ejemplo:
+
+python main.py --modo masql --accion seed
+
+
+Selecciona motor MASQL.
+
+Ejecuta INSERT.
+
+Guarda CSV.
+
+Devuelve JSON.
+
+6️⃣ Comparación conceptual de capas
+Característica	MASQL	MADB	MAORM
+Usa MySQL real	❌	✅	✅
+Motor propio	✅	❌	❌
+API personalizada	✅	✅	✅
+Soporta JSON estructurado	❌	❌	✅
+Multiplataforma (PHP)	❌	✅	❌
+7️⃣ Valor técnico del proyecto
+
+Este proyecto demuestra:
+
+Diseño de sistemas por capas.
+
+Abstracción sobre motores de persistencia.
+
+Implementación de un mini-SGBD.
+
+Conectores personalizados.
+
+ORM ligero.
+
+Multiplataforma (Python + PHP).
+
+Persistencia estructurada y compleja.
+
+8️⃣ Conclusión
+
+MADataSuite no es una colección de ejercicios aislados, sino un sistema completo que:
+
+Simula el funcionamiento de una base de datos.
+
+Implementa un conector real a MySQL.
+
+Construye una capa de abstracción tipo ORM.
+
+Replica el patrón en otro lenguaje.

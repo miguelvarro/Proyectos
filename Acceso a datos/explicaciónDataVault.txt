@@ -1,0 +1,330 @@
+Descripción detallada del proyecto (para entregar)
+
+DataVault es un proyecto integrador de Acceso a Datos cuyo objetivo es demostrar, en un único desarrollo coherente, que puedes persistir, recuperar y auditar información utilizando múltiples formatos y estrategias de almacenamiento, no solo bases de datos SQL. El proyecto implementa un “laboratorio” de persistencia donde un mismo sistema guarda datos en:
+
+Formato texto estructurado (JSON) para lectura/escritura humana y fácil interoperabilidad.
+
+Formato binario (pickle) para persistencia rápida de estructuras complejas en Python.
+
+Persistencia por clave hash (MD5) para demostrar la diferencia entre almacenamiento secuencial (por ruta/nombre) y almacenamiento por identificador derivado del contenido.
+
+Codificación y descodificación de información en imágenes (RGB) para mostrar persistencia alternativa (esteganografía simple) usando canales de color.
+
+CSV para persistencia tabular simple y compatible con herramientas ofimáticas.
+
+Auditoría del sistema de archivos para demostrar análisis del árbol de directorios, control de ficheros generados y trazabilidad del almacenamiento.
+
+El resultado es un proyecto modular y reutilizable: cada formato de persistencia está encapsulado en su propio módulo, con funciones claras que permiten integrarlo en otros programas (por ejemplo un microERP o un sistema de gestión). Además, la carpeta data/ funciona como “repositorio de datos” separado del código, cumpliendo buenas prácticas de arquitectura.
+
+Organización del proyecto (visión general)
+
+El proyecto se estructura en tres capas:
+
+Configuración y rutas
+
+config.py: define rutas, centraliza el acceso a carpetas y asegura que existan.
+
+Modelo de datos
+
+models.py: define el modelo común (Registro) que sirve para unificar la lógica del sistema.
+
+Módulos de persistencia y utilidades
+
+storage/: contiene un módulo por formato/estrategia de acceso a datos.
+
+main.py: orquesta una ejecución de demo que utiliza todos los módulos y genera evidencia en data/.
+
+La carpeta data/ se usa exclusivamente para archivos persistidos:
+
+data/secuencial/ → JSON en texto
+
+data/binario/ → pickle binario
+
+data/hash/ → JSON indexado por md5
+
+data/imagenes/ → imágenes con información codificada
+
+data/csv/ → tablas CSV
+
+Explicación detallada de cada archivo y del código
+1) config.py — configuración y rutas
+
+Qué hace
+
+Define rutas absolutas/seguras usando pathlib.Path (mejor que concatenar strings).
+
+Crea una función ensure_dirs() para garantizar que las carpetas de data/ existan antes de guardar.
+
+Por qué existe
+
+Evita duplicación de rutas en todos los módulos.
+
+Si mañana cambias data/ por otra ruta, solo tocas este archivo.
+
+Elementos clave
+
+BASE_DIR: ruta de la carpeta donde está el proyecto.
+
+DATA_DIR: ruta de la carpeta data.
+
+Variables como SECUENCIAL_DIR, BINARIO_DIR, etc.
+
+ensure_dirs(): crea carpetas con mkdir(parents=True, exist_ok=True).
+
+2) models.py — modelo unificado de datos (Registro)
+
+Qué hace
+
+Define un objeto estándar Registro para que el proyecto tenga coherencia entre módulos.
+
+Incluye:
+
+id: UUID único
+
+titulo: título del registro
+
+contenido: texto/contenido
+
+timestamp: marca temporal en ISO
+
+Por qué existe
+
+Sin un modelo común, cada práctica sería un ejercicio aislado.
+
+Unifica el proyecto: todos los módulos pueden almacenar o usar el mismo tipo de dato.
+
+Elementos clave
+
+@dataclass: reduce boilerplate y permite convertir fácilmente a dict.
+
+Registro.nuevo(...): genera automáticamente id y timestamp.
+
+to_dict(): transforma el dataclass a diccionario para serialización.
+
+3) storage/text_storage.py — persistencia en JSON (modo texto)
+
+Qué hace
+Implementa una mini-gestión de notas (similar a tu ejercicio original) con:
+
+cargar_notas()
+
+Si no existe el archivo, devuelve lista vacía.
+
+Si existe, lee el JSON y lo convierte a list[dict].
+
+guardar_notas(notas)
+
+Serializa la lista y la guarda en data/secuencial/notas.json.
+
+agregar_nota(notas, alumno, asignatura, valor)
+
+Añade un dict a la lista (no guarda automáticamente: separa lógica de persistencia).
+
+eliminar_notas_alumno(notas, alumno)
+
+Devuelve una lista filtrada sin las notas del alumno indicado.
+
+Qué demuestra
+
+Escritura y lectura en modo texto.
+
+Uso de JSON como formato de persistencia común.
+
+Manejo de archivo inexistente (robustez).
+
+4) storage/binary_storage.py — persistencia binaria con pickle
+
+Qué hace
+Persistencia en binario usando pickle, pero con una mejora importante: guarda diccionarios, no objetos de clase, para evitar dependencia de la clase al cargar.
+
+Funciones:
+
+guardar_clientes(clientes)
+
+Guarda una lista de diccionarios en data/binario/clientes.bin.
+
+cargar_clientes()
+
+Recupera la lista desde binario si existe; si no, lista vacía.
+
+demo_clientes(n)
+
+Genera un conjunto de clientes de ejemplo.
+
+Qué demuestra
+
+Persistencia binaria real.
+
+Serialización/deserialización con pickle.
+
+Buenas prácticas: portabilidad (dicts) y separación de demo vs persistencia.
+
+5) storage/hash_storage.py — persistencia por hash (secuencialidad vs hash)
+
+Qué hace
+Guarda cada personaje en un archivo JSON cuyo nombre es un hash MD5 calculado a partir de campos relevantes.
+
+Funciones:
+
+clave_hash(nombre, importancia, tipo)
+
+Crea una cadena estable y calcula hashlib.md5(...).hexdigest().
+
+Esto convierte contenido → clave.
+
+guardar_personaje(personaje)
+
+Genera el hash y guarda data/hash/<hash>.json.
+
+leer_personaje(hash_id)
+
+Recupera el JSON exacto por su hash.
+
+guardar_lote(personajes)
+
+Guarda varios personajes y devuelve la lista de hashes generados.
+
+Qué demuestra
+
+Diferencia entre almacenamiento:
+
+Secuencial: guardas por id/nombre/orden.
+
+Por hash: guardas por clave derivada (acceso directo).
+
+Concepto de integridad/identificador derivado de contenido.
+
+Manejo de persistencia distribuida en ficheros.
+
+6) storage/image_storage.py — codificación/decodificación en imágenes
+
+Qué hace
+Codifica un texto dentro de una imagen RGB y permite recuperarlo.
+
+Problema original en tu script
+
+Tu decoder leía toda la imagen y devolvía basura al final, porque la imagen se rellena con (0,0,0).
+
+Solución profesional aplicada
+
+Se añade un encabezado de 4 bytes al inicio que guarda la longitud exacta del mensaje:
+
+_int_to_4bytes(n) y _4bytes_to_int(b)
+Convierte longitud ↔ bytes.
+
+texto_a_imagen(texto, salida_nombre)
+
+Convierte texto a bytes UTF-8.
+
+Prepend: 4 bytes con longitud.
+
+Agrupa en triples (R,G,B).
+
+Calcula tamaño cuadrado mínimo (ceil(sqrt(num_pixels))).
+
+Crea imagen RGB y escribe los valores.
+
+imagen_a_texto(ruta_imagen)
+
+Lee todos los píxeles.
+
+Reconstruye bytes.
+
+Obtiene longitud del encabezado.
+
+Lee exactamente esos bytes y decodifica UTF-8.
+
+Qué demuestra
+
+Codificación de información en imágenes.
+
+Lectura y escritura de datos en un formato no convencional.
+
+Control de delimitación y robustez de decodificación.
+
+7) storage/csv_storage.py — persistencia tabular CSV
+
+Qué hace
+Proporciona una clase GestorCSV para escribir y leer CSV usando la librería estándar csv.
+
+__init__(archivo)
+
+Crea la ruta en data/csv/.
+
+escribir(fila)
+
+Escribe una fila CSV correctamente con csv.writer.
+
+leer_ultima()
+
+Lee todas las filas y devuelve la última como tupla.
+
+Qué demuestra
+
+Persistencia en CSV.
+
+Lectura/escritura compatible con Excel, LibreOffice, etc.
+
+Uso correcto del módulo csv (evita errores por joins manuales).
+
+8) storage/filesystem_audit.py — auditoría del árbol del sistema de archivos
+
+Qué hace
+Imprime el árbol de una ruta con iconos, basado en os.walk.
+
+imprimir_arbol(ruta)
+
+Recorre directorios y archivos.
+
+Calcula el nivel de profundidad.
+
+Imprime el árbol con indentación y símbolos.
+
+Qué demuestra
+
+Revisión del sistema de archivos.
+
+Comprensión de jerarquías de directorios.
+
+Generación de evidencia del almacenamiento real (qué archivos se han creado).
+
+9) storage/__init__.py — paquete de módulos
+
+Qué hace
+Facilita imports como:
+
+from storage import text_storage, binary_storage, hash_storage
+
+
+Qué demuestra
+
+Estructura modular de librería (importable, reutilizable).
+
+10) main.py — orquestador / demo integradora
+
+Qué hace
+Ejecuta un flujo completo que prueba todos los módulos:
+
+ensure_dirs() para preparar carpetas.
+
+Carga notas, añade notas, y guarda JSON.
+
+Genera clientes demo y guarda pickle.
+
+Guarda un personaje con hash y obtiene el archivo generado.
+
+Crea un Registro y codifica su contenido en una imagen, luego lo descodifica.
+
+Escribe en CSV y lee la última fila.
+
+Imprime el árbol de data/.
+
+Muestra un resumen final con rutas y resultados.
+
+Qué demuestra
+
+Integración real de todos los “mini-proyectos” en uno solo.
+
+Evidencias automáticas: al ejecutarlo, se generan archivos en data/.
+
+Separación de responsabilidades: main.py manda, los módulos ejecutan.

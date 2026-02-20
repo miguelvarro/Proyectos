@@ -1,0 +1,77 @@
+✅ 1. Comprobar Ollama
+
+Igual que antes:
+
+ollama serve
+
+
+Modelos:
+
+ollama list
+
+✅ 2. Entrar en backend
+cd microchatgpt/backend
+
+
+Activar entorno:
+
+venv\Scripts\activate
+
+
+Si no existe:
+
+python -m venv venv
+venv\Scripts\activate
+pip install flask flask-cors werkzeug requests
+
+✅ 3. Iniciar backend Flask
+python app.py
+
+
+Debe mostrar algo tipo:
+
+Running on http://127.0.0.1:5000
+
+
+No cierres esta terminal.
+
+✅ 4. Abrir frontend
+
+Abre:
+
+frontend/index.html
+
+
+o si usas servidor estático:
+
+python -m http.server 8000
+
+
+y entra en:
+
+http://localhost:8000
+
+✅ 5. Test mínimo funcional
+
+Registrar usuario
+
+Login
+
+Escribir mensaje
+
+Comprobar:
+
+Responde
+
+Guarda conversación
+
+Cambia modelo
+
+Enviar con Enter funciona
+
+⚠️ Problemas comunes
+Problema	Causa
+No responde al login	Backend no iniciado
+500 error	Base de datos no creada
+Modelo no cambia	No se pasa model en JSON
+No guarda mensajes	Error en sesión/token
