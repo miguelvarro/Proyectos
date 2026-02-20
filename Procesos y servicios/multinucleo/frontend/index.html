@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Multinúcleo - Render & ZIP</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header>
+    <h1>Multinúcleo: Path Tracer + ZIP + WebSockets + Workers</h1>
+    <p class="sub">Cliente Web (Workers) ↔ Servidor Python (WebSockets) ↔ Multinúcleo (procesos)</p>
+  </header>
+
+  <main>
+    <section class="card">
+      <div class="row">
+        <label>WS URL</label>
+        <input id="wsUrl" value="ws://127.0.0.1:8765" />
+        <button id="btnConnect">Conectar</button>
+      </div>
+
+      <div class="row">
+        <button id="btnRender" disabled>Render (Path Tracer)</button>
+        <button id="btnZip" disabled>ZIP outputs</button>
+      </div>
+
+      <div class="row">
+        <label>Log</label>
+      </div>
+      <pre id="log"></pre>
+    </section>
+
+    <section class="card">
+      <h2>Último resultado</h2>
+      <div id="resultBox" class="resultBox">
+        <div id="resultMeta" class="muted">Aún no hay resultados…</div>
+        <a id="downloadLink" class="hidden" download>Descargar</a>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <span class="muted">Tip: abre la consola del navegador para ver mensajes del worker.</span>
+  </footer>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
+
