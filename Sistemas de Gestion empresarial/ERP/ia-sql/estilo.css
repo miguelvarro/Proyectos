@@ -1,0 +1,78 @@
+body{ font-family: sans-serif; background:#f3f3f3; margin:0; }
+.wrap{ max-width: 900px; margin: 24px auto; padding: 16px; }
+.chat{
+  background:white; border:1px solid rgba(0,0,0,.12);
+  border-radius:12px; padding:12px; min-height: 320px;
+}
+.bubble{
+  padding:10px 12px; border-radius:12px; margin: 8px 0; max-width: 80%;
+  border:1px solid rgba(0,0,0,.08);
+}
+.me{ margin-left:auto; background:#fff7ec; }
+.bot{ background:#eef4ff; }
+.row{ display:flex; gap:10px; margin-top: 12px; }
+input{ flex:1; padding:10px; border-radius:10px; border:1px solid rgba(0,0,0,.2); }
+button{ padding:10px 14px; border-radius:10px; border:0; background: DarkOrange; color:white; cursor:pointer; }
+.muted{ color:#555; }
+.debug{
+  margin-top: 12px; background:#111; color:#eee; padding:12px; border-radius:12px;
+  overflow:auto;
+}
+table{ width:100%; border-collapse: collapse; margin-top:10px; }
+td,th{ border:1px solid #ddd; padding:8px; font-size: 14px; }
+
+.quick{ display:flex; gap:8px; flex-wrap: wrap; margin: 10px 0 14px; }
+.qbtn{
+  padding: 9px 11px;
+  border-radius: 10px;
+  border:1px solid rgba(0,0,0,.16);
+  background: #fff;
+  cursor:pointer;
+  font-weight: 700;
+}
+.qbtn:hover{ filter: brightness(0.98); }
+
+.two{ display:grid; grid-template-columns: 1.2fr .8fr; gap: 14px; margin-top: 12px; }
+@media (max-width: 900px){ .two{ grid-template-columns: 1fr; } }
+
+.sub{ font-weight: 900; margin: 8px 0; }
+
+.history{
+  background:white; border:1px solid rgba(0,0,0,.12);
+  border-radius:12px; padding:10px; min-height: 120px;
+  display:flex; flex-wrap: wrap; gap: 8px; align-content: flex-start;
+}
+
+.hchip{
+  padding: 7px 10px;
+  border-radius: 999px;
+  border:1px solid rgba(0,0,0,.14);
+  background: #f7f7f7;
+  cursor:pointer;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* FIX: Quick buttons visibles siempre */
+.quick .qbtn{
+  color: #111 !important;
+  background: #fff !important;
+  font-size: 14px !important;
+  line-height: 1.1 !important;
+  padding: 10px 12px !important;
+  min-height: 38px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  border: 1px solid rgba(0,0,0,.18) !important;
+  border-radius: 12px !important;
+  font-weight: 800 !important;
+  white-space: nowrap !important;
+}
+.quick .qbtn:hover{
+  filter: brightness(0.98);
+}
+

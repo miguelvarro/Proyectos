@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>IA-SQL (Mini)</title>
+  <link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+  <div class="wrap">
+    <h2>ERP + IA (SQL) — mini</h2>
+    <p class="muted">Preguntas rápidas o escribe una pregunta.</p>
+
+    <div class="quick">
+      <button class="qbtn" data-q="usuarios">Usuarios</button>
+      <button class="qbtn" data-q="aplicaciones">Aplicaciones</button>
+      <button class="qbtn" data-q="categorías">Categorías</button>
+      <button class="qbtn" data-q="SELECT Identificador, usuario, nombrecompleto FROM usuarios LIMIT 50">SELECT ejemplo</button>
+      <button class="qbtn" data-q="ayuda">Ayuda</button>
+    </div>
+
+    <div class="row">
+      <input id="q" type="text" placeholder="Haz una pregunta...">
+      <button id="send">Enviar</button>
+    </div>
+
+    <div class="two">
+      <div>
+        <div class="sub">Chat</div>
+        <div id="chat" class="chat"></div>
+      </div>
+
+      <div>
+        <div class="sub">Historial</div>
+        <div id="history" class="history"></div>
+        <pre id="debug" class="debug"></pre>
+      </div>
+    </div>
+  </div>
+
+  <script src="comportamiento.js"></script>
+</body>
+</html>
+

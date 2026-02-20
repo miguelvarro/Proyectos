@@ -1,0 +1,56 @@
+{
+    "columnas": [
+        {
+            "nombre": "Por hacer",
+            "tarjetas": [
+                {
+                    "texto": "Recopilar requisitos",
+                    "color": "#ffa500"
+                },
+                {
+                    "texto": "Crear el esquema de la base de datos",
+                    "color": "#90ee90"
+                }
+            ]
+        },
+        {
+            "nombre": "En progreso",
+            "tarjetas": [
+                {
+                    "texto": "Desarrollar la función de inicio de sesión",
+                    "color": "#ffff00"
+                },
+                {
+                    "texto": "Escribir la propuesta del proyecto",
+                    "color": "#add8e6"
+                },
+                {
+                    "texto": "hola",
+                    "color": "lightblue"
+                }
+            ]
+        },
+        {
+            "nombre": "En revisión",
+            "tarjetas": [
+                {
+                    "texto": "Revisar el código del API",
+                    "color": "#ffc0cb"
+                }
+            ]
+        },
+        {
+            "nombre": "Hecho",
+            "tarjetas": [
+                {
+                    "texto": "Configurar el repositorio del proyecto",
+                    "color": "#808080"
+                },
+                {
+                    "texto": "Reunión inicial del proyecto",
+                    "color": "#008000"
+                }
+            ]
+        }
+    ]
+}

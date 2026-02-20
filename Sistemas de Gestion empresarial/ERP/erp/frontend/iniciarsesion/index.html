@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Iniciar sesión</title>
+
+  <link rel="stylesheet" href="../comun/estilo.css">
+  <link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+  <main>
+    <div class="card box">
+      <div class="title">
+        <div class="dot"></div>
+        <div>
+          <div style="font-weight:900; font-size:20px;">ERP Miguel</div>
+          <div style="color:var(--muted); font-size:13px;">Acceso al sistema</div>
+        </div>
+      </div>
+
+      <div class="label">Usuario</div>
+      <input class="input" type="text" id="usuario" placeholder="Usuario">
+
+      <div class="label">Contraseña</div>
+      <input class="input" type="password" id="contrasena" placeholder="Contraseña">
+
+      <button class="btn" style="width:100%; margin-top:14px;">Iniciar sesión</button>
+      <div id="estado"></div>
+    </div>
+  </main>
+
+  <script src="comportamiento.js"></script>
+</body>
+</html>
+

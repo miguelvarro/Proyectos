@@ -1,0 +1,20 @@
+{
+  "columnas": [
+    { "nombre": "Por hacer", "tarjetas": [
+      { "texto": "Escribir la propuesta del proyecto", "color": "lightblue" },
+      { "texto": "Recopilar requisitos", "color": "orange" }
+    ]},
+    { "nombre": "En progreso", "tarjetas": [
+      { "texto": "Desarrollar la función de inicio de sesión", "color": "yellow" },
+      { "texto": "Crear el esquema de la base de datos", "color": "lightgreen" }
+    ]},
+    { "nombre": "En revisión", "tarjetas": [
+      { "texto": "Revisar el código del API", "color": "pink" }
+    ]},
+    { "nombre": "Hecho", "tarjetas": [
+      { "texto": "Configurar el repositorio del proyecto", "color": "gray" },
+      { "texto": "Reunión inicial del proyecto", "color": "green" }
+    ]}
+  ]
+}
+

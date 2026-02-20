@@ -1,0 +1,46 @@
+body{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding: 18px;
+}
+
+main{
+  width: 420px;
+  max-width: 100%;
+}
+
+.box{
+  padding: 18px;
+}
+
+.title{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom: 10px;
+}
+
+.title .dot{
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  box-shadow: 0 0 0 4px rgba(255,138,0,.18);
+}
+
+.label{
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 12px;
+  margin-bottom: 6px;
+}
+
+#estado{
+  margin-top: 10px;
+  color: #ffb4b4;
+  font-weight: 700;
+  min-height: 18px;
+}
+

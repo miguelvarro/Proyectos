@@ -1,0 +1,128 @@
+#kanban{
+  display:flex;
+  gap:14px;
+  padding: 10px 4px;
+  overflow-x:auto;
+  align-items:flex-start;
+}
+
+.columna{
+  width:300px;
+  background: rgba(255,255,255,.06);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:12px;
+  box-shadow: 0 10px 22px rgba(0,0,0,.18);
+}
+
+.col-head{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom:10px;
+}
+
+.col-title{
+  font-weight:900;
+  flex:1;
+  padding:8px 10px;
+  border-radius:12px;
+  background: rgba(0,0,0,.18);
+  outline:none;
+}
+
+.icon-btn{
+  border:1px solid var(--border);
+  background:rgba(255,255,255,.06);
+  border-radius:12px;
+  padding:8px 10px;
+  cursor:pointer;
+  color: var(--text);
+}
+.icon-btn:hover{ background:rgba(255,255,255,.10); }
+
+.dropzone{
+  min-height: 40px;
+  padding: 6px;
+  border-radius: 14px;
+}
+
+.dropzone.over{
+  outline: 2px dashed rgba(255,255,255,.30);
+  background: rgba(255,255,255,.04);
+}
+
+.tarjeta{
+  background: rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.10);
+  border-left: 10px solid transparent;
+  border-radius:14px;
+  padding:10px;
+  margin:10px 0;
+  cursor: grab;
+  box-shadow: 0 6px 14px rgba(0,0,0,.18);
+}
+
+.tarjeta .texto{
+  outline:none;
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.25rem;
+}
+
+.tarjeta .del{
+  margin-top:10px;
+  width:100%;
+  padding: 9px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,0,0,.10);
+  color: var(--text);
+  font-weight: 800;
+  cursor:pointer;
+}
+.tarjeta .del:hover{ background: rgba(255,0,0,.16); }
+
+/* Columna Añadir */
+.add-col{
+  background: rgba(255,255,255,.04);
+  border: 1px dashed rgba(255,255,255,.20);
+  box-shadow: none;
+}
+
+.add-btn{
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  padding: 14px 12px;
+  border-radius: 14px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-weight: 950;
+  cursor:pointer;
+}
+
+.add-btn:hover{
+  background: rgba(255,255,255,.06);
+  color: var(--text);
+}
+
+.add-btn .plus{
+  width: 28px;
+  height: 28px;
+  border-radius: 10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background: rgba(255,138,0,.14);
+  border: 1px solid rgba(255,138,0,.25);
+  color: var(--text);
+}
+/* Toolbar search en móvil */
+@media (max-width: 900px){
+  #searchKanban{ width: 160px !important; }
+}
+
